@@ -5,6 +5,7 @@ import com.verify_x.entity.Admin;
 import com.verify_x.entity.Candidate;
 import com.verify_x.entity.PendingRegistration;
 import com.verify_x.enums.ApplicationStatus;
+import com.verify_x.enums.AppliedRole;
 import com.verify_x.enums.Role;
 import com.verify_x.exception.EmailAlreadyExistsException;
 import com.verify_x.exception.UserAlreadyExistsException;
@@ -96,7 +97,7 @@ class AuthServiceImplTest {
         when(dto.getUsername()).thenReturn("TestUser");
         when(dto.getPassword()).thenReturn("password");
         when(dto.getAppliedRole())
-                .thenReturn(Candidate.AppliedRole.BACKEND_DEVELOPER);
+                .thenReturn(AppliedRole.BACKEND_DEVELOPER);
         when(dto.getCandidateType()).thenReturn(null);
 
         when(candidateRepository.existsByEmail("test@gmail.com"))
@@ -263,8 +264,7 @@ class AuthServiceImplTest {
                         .email("test@gmail.com")
                         .phoneNumber("9876543210")
                         .password("encoded-password")
-                        .appliedRole(
-                                Candidate.AppliedRole.BACKEND_DEVELOPER.name()
+                        .appliedRole(AppliedRole.BACKEND_DEVELOPER.name()
                         )
                         .candidateType(null)
                         .emailOtpHash("encoded-otp")
