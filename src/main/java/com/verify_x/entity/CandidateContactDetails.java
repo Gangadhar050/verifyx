@@ -129,7 +129,6 @@ public class CandidateContactDetails {
      */
     @Column(
             name = "current_address",
-            nullable = false,
             columnDefinition = "TEXT"
     )
     private String currentAddress;
@@ -168,14 +167,12 @@ public class CandidateContactDetails {
      * GPS coordinates captured from browser/device.
      */
     @Column(
-            name = "current_latitude",
-            nullable = false
+            name = "current_latitude"
     )
     private Double currentLatitude;
 
     @Column(
-            name = "current_longitude",
-            nullable = false
+            name = "current_longitude"
     )
     private Double currentLongitude;
 
@@ -187,21 +184,19 @@ public class CandidateContactDetails {
     @Lob
     @Column(
             name = "current_address_photo",
-            nullable = false,
             columnDefinition = "LONGBLOB"
     )
     private byte[] currentAddressPhoto;
 
     @Column(
             name = "current_address_photo_name",
-            nullable = false,
+
             length = 255
     )
     private String currentAddressPhotoName;
 
     @Column(
             name = "current_address_photo_content_type",
-            nullable = false,
             length = 100
     )
     private String currentAddressPhotoContentType;
