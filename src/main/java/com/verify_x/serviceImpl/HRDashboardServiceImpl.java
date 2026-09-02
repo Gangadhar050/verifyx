@@ -22,7 +22,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class HRDashboardServiceImpl
+public class
+
+HRDashboardServiceImpl
         implements HRDashboardService {
 
     private final CandidateRepository candidateRepository;

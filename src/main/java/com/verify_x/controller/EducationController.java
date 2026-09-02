@@ -97,21 +97,44 @@ public class EducationController {
                         .build()
         );
     }
-    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @PreAuthorize("hasRole('CANDIDATE')")
+//    @Operation(summary = "Update existing education details")
+//    public ResponseEntity<ApiResponse<EducationResponse>> updateEducation(
+//            @ParameterObject
+//            @ModelAttribute EducationRequest request,@RequestParam(value = "tenthMarksCard", required = false) MultipartFile tenthMarksCard,
+//            @RequestParam(value = "twelfthMarksCard", required = false) MultipartFile twelfthMarksCard,
+//            @RequestParam(value = "degreeCertificate", required = false) MultipartFile degreeCertificate,
+//            @RequestParam(value = "mastersMarksCard", required = false) MultipartFile mastersMarksCard) {
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.<EducationResponse>builder()
+//                        .success(true)
+//                        .message("Education details updated successfully.")
+//                        .data(educationService.updateEducation(request, tenthMarksCard, twelfthMarksCard, degreeCertificate, mastersMarksCard))
+//                        .build()
+//        );
+//    }
+
+    //Auto fetch and update education details from uploaded documents (marksheets/certificates)
+    @PutMapping(value = "/update-from-documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CANDIDATE')")
-    @Operation(summary = "Update existing education details")
-    public ResponseEntity<ApiResponse<EducationResponse>> updateEducation(
-            @ParameterObject
-            @ModelAttribute EducationRequest request,@RequestParam(value = "tenthMarksCard", required = false) MultipartFile tenthMarksCard,
+    @Operation(summary = "Auto-extract from uploaded marksheets/certificates and update existing education record")
+    public ResponseEntity<ApiResponse<EducationResponse>> updateEducationFromDocuments(
+            @RequestParam(value = "tenthMarksCard", required = false) MultipartFile tenthMarksCard,
             @RequestParam(value = "twelfthMarksCard", required = false) MultipartFile twelfthMarksCard,
             @RequestParam(value = "degreeCertificate", required = false) MultipartFile degreeCertificate,
             @RequestParam(value = "mastersMarksCard", required = false) MultipartFile mastersMarksCard) {
 
+        EducationResponse response = educationService.updateEducationFromDocuments(
+                tenthMarksCard, twelfthMarksCard, degreeCertificate, mastersMarksCard
+        );
+
         return ResponseEntity.ok(
                 ApiResponse.<EducationResponse>builder()
                         .success(true)
-                        .message("Education details updated successfully.")
-                        .data(educationService.updateEducation(request, tenthMarksCard, twelfthMarksCard, degreeCertificate, mastersMarksCard))
+                        .message("Education details extracted and updated successfully.")
+                        .data(response)
                         .build()
         );
     }

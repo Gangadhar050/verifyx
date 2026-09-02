@@ -45,4 +45,10 @@ public interface EducationService {
                                       MultipartFile twelfthMarksCard,
                                       MultipartFile degreeCertificate,
                                       MultipartFile mastersMarksCard);
+
+    EducationResponse updateEducationFromDocuments(
+            MultipartFile tenthMarksCard,
+            MultipartFile twelfthMarksCard,
+            MultipartFile degreeCertificate,
+            MultipartFile mastersMarksCard);
 }

@@ -20,6 +20,9 @@ public class GeminiEducationParser {
     @Value("${spring.ai.google.genai.api-key:}")
     private String configuredApiKey;
 
+    private static final int MAX_ATTEMPTS = 3;
+    private static final long INITIAL_BACKOFF_MILLIS = 5000;
+
     public GeminiEducationParser(ChatClient chatClient) {
         this.chatClient = chatClient;
     }
@@ -40,31 +43,59 @@ public class GeminiEducationParser {
             case MASTERS_MARKS_CARD, MASTERS_DEGREE_CERTIFICATE -> mastersPrompt();
         };
 
-        try {
-            Media media = Media.builder()
-                    .mimeType(MimeTypeUtils.parseMimeType(file.getContentType()))
-                    .data(file.getResource())
-                    .build();
+        long backoffMillis = INITIAL_BACKOFF_MILLIS;
 
-            String response = chatClient.prompt()
-                    .user(u -> u.text(promptText).media(media))
-                    .call()
-                    .content();
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                Media media = Media.builder()
+                        .mimeType(MimeTypeUtils.parseMimeType(file.getContentType()))
+                        .data(file.getResource())
+                        .build();
 
-            if (response == null || response.isBlank()) {
-                throw new RuntimeException("Gemini returned an empty response.");
+                String response = chatClient.prompt()
+                        .user(u -> u.text(promptText).media(media))
+                        .call()
+                        .content();
+
+                if (response == null || response.isBlank()) {
+                    throw new RuntimeException("Gemini returned an empty response.");
+                }
+
+                response = response.replace("```json", "").replace("```", "").trim();
+
+                log.debug("Gemini response for {}: {}", documentType, response);
+
+                return response;
+
+            } catch (Exception e) {
+
+                boolean isRetryable = e.getMessage() != null &&
+                        (e.getMessage().contains("503")
+                                || e.getMessage().contains("high demand")
+                                || e.getMessage().contains("429"));
+
+                if (isRetryable && attempt < MAX_ATTEMPTS) {
+                    log.warn("Gemini call failed for {} (attempt {}/{}), retrying in {}ms: {}",
+                            documentType, attempt, MAX_ATTEMPTS, backoffMillis, e.getMessage());
+                    try {
+                        Thread.sleep(backoffMillis);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Interrupted during retry backoff.", ie);
+                    }
+                    backoffMillis *= 2;
+                    continue;
+                }
+
+                log.error("Gemini call failed for documentType {} (final attempt {}/{})",
+                        documentType, attempt, MAX_ATTEMPTS, e);
+                throw new RuntimeException(
+                        "Failed to parse education document using Gemini: " + e.getMessage(), e);
             }
-
-            response = response.replace("```json", "").replace("```", "").trim();
-
-            log.debug("Gemini response for {}: {}", documentType, response);
-
-            return response;
-
-        } catch (Exception e) {
-            log.error("Gemini call failed for documentType {}", documentType, e);
-            throw new RuntimeException("Failed to parse education document using Gemini: " + e.getMessage(), e);
         }
+
+        // Unreachable in practice - loop always returns or throws - but required for compilation
+        throw new RuntimeException("Gemini call failed after " + MAX_ATTEMPTS + " attempts.");
     }
 
     private String commonRules() {

@@ -1,3 +1,5 @@
+//package com.verify_x.serviceImpl;
+
 package com.verify_x.serviceImpl;
 
 import com.verify_x.dto.EducationRequest;
@@ -14,7 +16,6 @@ import com.verify_x.services.EducationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-//import com.verify_x.dto.DocumentFormDto;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,7 @@ import java.util.function.Consumer;
 public class EducationServiceImpl implements EducationService {
 
     private final EducationRepository educationRepository;
-
     private final CandidateRepository candidateRepository;
-
     private final com.verify_x.util.GeminiEducationParser geminiEducationParser;
     private final com.verify_x.util.EducationPdfTextExtractor educationPdfTextExtractor;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
@@ -66,33 +65,22 @@ public class EducationServiceImpl implements EducationService {
     private EducationResponse mapToResponse(Education education) {
 
         return EducationResponse.builder()
-
                 .id(education.getId())
-                //10th
                 .tenthSchoolName(education.getTenthSchoolName())
                 .tenthBoard(education.getTenthBoard())
                 .tenthSchoolLocation(education.getTenthSchoolLocation())
                 .tenthRollNumber(education.getTenthRollNumber())
                 .tenthPassingYear(education.getTenthPassingYear())
                 .tenthPercentage(education.getTenthPercentage())
-                .tenthMarksCardName(
-                        education.getTenthMarksCardName())
-//12th
-                .twelfthInstitutionName(
-                        education.getTwelfthInstitutionName())
-                .twelfthBoardUniversity(
-                        education.getTwelfthBoardUniversity())
+                .tenthMarksCardName(education.getTenthMarksCardName())
+
+                .twelfthInstitutionName(education.getTwelfthInstitutionName())
+                .twelfthBoardUniversity(education.getTwelfthBoardUniversity())
                 .twelfthLocation(education.getTwelfthLocation())
-//                .twelfthStream(
-//                        education.getTwelfthStream())
-                .twelfthRegistrationNumber(
-                        education.getTwelfthRegistrationNumber())
-                .twelfthPassingYear(
-                        education.getTwelfthPassingYear())
-                .twelfthPercentage(
-                        education.getTwelfthPercentage())
-                .twelfthMarksCardName(
-                        education.getTwelfthMarksCardName())
+                .twelfthRegistrationNumber(education.getTwelfthRegistrationNumber())
+                .twelfthPassingYear(education.getTwelfthPassingYear())
+                .twelfthPercentage(education.getTwelfthPercentage())
+                .twelfthMarksCardName(education.getTwelfthMarksCardName())
 
                 .degreeName(education.getDegreeName())
                 .specialization(education.getSpecialization())
@@ -103,66 +91,40 @@ public class EducationServiceImpl implements EducationService {
                 .degreeStartYear(education.getDegreeStartYear())
                 .degreeEndYear(education.getDegreeEndYear())
                 .degreePercentage(education.getDegreePercentage())
-//                .backlogStatus(education.getBacklogStatus())
-                .degreeCertificateName(
-                        education.getDegreeCertificateName())
+                .degreeCertificateName(education.getDegreeCertificateName())
 
                 .mastersDegree(education.getMastersDegree())
-                .mastersSpecialization(
-                        education.getMastersSpecialization())
-                .mastersCollege(
-                        education.getMastersCollege())
-                .mastersUniversity(
-                        education.getMastersUniversity())
-                .mastersRegistrationNumber(
-                        education.getMastersRegistrationNumber())
+                .mastersSpecialization(education.getMastersSpecialization())
+                .mastersCollege(education.getMastersCollege())
+                .mastersUniversity(education.getMastersUniversity())
+                .mastersRegistrationNumber(education.getMastersRegistrationNumber())
                 .mastersLocation(education.getMastersLocation())
-//                .modeOfStudy(
-//                        education.getModeOfStudy())
-                .mastersStartYear(
-                        education.getMastersStartYear())
-                .mastersEndYear(
-                        education.getMastersEndYear())
-                .mastersPercentage(
-                        education.getMastersPercentage())
-                .mastersMarksCardName(
-                        education.getMastersMarksCardName())
-//                .mastersDegreeCertificateName(
-//                        education.getMastersDegreeCertificateName())
-//                .technicalSkills(
-//                        education.getCandidate().getTechnicalSkills()
-//                )
+                .mastersStartYear(education.getMastersStartYear())
+                .mastersEndYear(education.getMastersEndYear())
+                .mastersPercentage(education.getMastersPercentage())
+                .mastersMarksCardName(education.getMastersMarksCardName())
                 .build();
     }
 
     private void validateFile(MultipartFile file) {
 
-        // File is optional during update
         if (file == null || file.isEmpty()) {
             return;
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException(
-                    "Maximum allowed file size is 5 MB."
-            );
+            throw new BadRequestException("Maximum allowed file size is 5 MB.");
         }
 
         String contentType = file.getContentType();
 
         if (contentType == null ||
                 !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
-
-            throw new BadRequestException(
-                    "Only PDF, JPG, JPEG and PNG files are allowed."
-            );
+            throw new BadRequestException("Only PDF, JPG, JPEG and PNG files are allowed.");
         }
 
-        log.debug(
-                "Validated education document: {}, Size: {} bytes",
-                file.getOriginalFilename(),
-                file.getSize()
-        );
+        log.debug("Validated education document: {}, Size: {} bytes",
+                file.getOriginalFilename(), file.getSize());
     }
 
     private void saveFile(
@@ -186,17 +148,13 @@ public class EducationServiceImpl implements EducationService {
             Education education,
             EducationRequest request) throws IOException {
 
-
-        // 10th
         education.setTenthSchoolName(request.getTenthSchoolName());
-        education.setTenthBoard(request.getTenthBoard());   // now String, not BoardType
+        education.setTenthBoard(request.getTenthBoard());
         education.setTenthSchoolLocation(request.getTenthSchoolLocation());
         education.setTenthRollNumber(request.getTenthRollNumber());
         education.setTenthPassingYear(request.getTenthPassingYear());
         education.setTenthPercentage(request.getTenthPercentage());
 
-
-        // 12th
         education.setTwelfthInstitutionName(request.getTwelfthInstitutionName());
         education.setTwelfthBoardUniversity(request.getTwelfthBoardUniversity());
         education.setTwelfthLocation(request.getTwelfthLocation());
@@ -204,8 +162,6 @@ public class EducationServiceImpl implements EducationService {
         education.setTwelfthPassingYear(request.getTwelfthPassingYear());
         education.setTwelfthPercentage(request.getTwelfthPercentage());
 
-
-        // Degree
         education.setDegreeName(request.getDegreeName());
         education.setSpecialization(request.getSpecialization());
         education.setCollegeName(request.getCollegeName());
@@ -215,23 +171,17 @@ public class EducationServiceImpl implements EducationService {
         education.setDegreeStartYear(request.getDegreeStartYear());
         education.setDegreeEndYear(request.getDegreeEndYear());
         education.setDegreePercentage(request.getDegreePercentage());
-//        education.setBacklogStatus(request.getBacklogStatus());
 
-
-        // Masters
         education.setMastersDegree(request.getMastersDegree());
         education.setMastersSpecialization(request.getMastersSpecialization());
         education.setMastersCollege(request.getMastersCollege());
         education.setMastersUniversity(request.getMastersUniversity());
         education.setMastersRegistrationNumber(request.getMastersRegistrationNumber());
-//        education.setModeOfStudy(request.getModeOfStudy());
         education.setMastersLocation(request.getMastersLocation());
         education.setMastersStartYear(request.getMastersStartYear());
         education.setMastersEndYear(request.getMastersEndYear());
         education.setMastersPercentage(request.getMastersPercentage());
 
-
-        //Documents
         saveFile(
                 request.getTenthMarksCard(),
                 education::setTenthMarksCard,
@@ -259,37 +209,17 @@ public class EducationServiceImpl implements EducationService {
                 education::setMastersMarksCardName,
                 education::setMastersMarksCardContentType
         );
-
-//        saveFile(
-//                request.getMastersDegreeCertificate(),
-//                education::setMastersDegreeCertificate,
-//                education::setMastersDegreeCertificateName,
-//                education::setMastersDegreeCertificateContentType
-//        );
-        Candidate candidate = education.getCandidate();
-
-//        if (request.getTechnicalSkills() != null) {
-//            candidate.setTechnicalSkills(request.getTechnicalSkills());
-//            candidateRepository.save(candidate);
-//        }
     }
-
 
     public EducationResponse autoFillFromDocument(
             MultipartFile file, EducationDocumentType documentType, EducationRequest request) {
 
         validateFile(file);
 
-        // First try local extraction for text-based PDFs. This makes many PDF
-        // marksheets work even when the cloud document-AI key is not configured.
         Map<String, String> fields = new java.util.LinkedHashMap<>(
                 educationPdfTextExtractor.extract(file, documentType)
         );
 
-        // Then use Gemini for scanned PDFs/images or to fill fields missed locally.
-        // The local profile uses "local-disabled-key" when GEMINI_API_KEY is absent.
-        // In that case we keep any local PDF fields and return a clear error only
-        // when nothing could be extracted.
         try {
             String geminiJson = geminiEducationParser.parseEducationDocument(file, documentType);
             Map<String, String> aiFields = parseJsonSafely(geminiJson);
@@ -303,18 +233,15 @@ public class EducationServiceImpl implements EducationService {
         if (fields.isEmpty()) {
             throw new BadRequestException(
                     "The document could not be read automatically. For scanned PDF/JPG/PNG files, "
-                    + "configure GEMINI_API_KEY in the backend and restart it. "
-                    + "Text-based PDFs can be read locally without Gemini."
+                            + "configure GEMINI_API_KEY in the backend and restart it. "
+                            + "Text-based PDFs can be read locally without Gemini."
             );
         }
 
         Candidate candidate = getLoggedInCandidate();
 
-        // Build a transient (not-yet-saved) Education object just to preview the response.
-        // We do NOT fetch/modify the actual stored record here, and we do NOT call
-        // educationRepository.save() - this is preview-only.
         Education preview = educationRepository.findByCandidate(candidate)
-                .map(existing -> copyOf(existing)) // clone existing data if present, so other sections aren't lost in the preview
+                .map(this::copyOf)
                 .orElseGet(() -> {
                     Education e = new Education();
                     e.setCandidate(candidate);
@@ -328,8 +255,6 @@ public class EducationServiceImpl implements EducationService {
         return mapToResponse(preview);
     }
 
-    // Add this helper method - shallow copy of Education fields so we don't mutate
-// or accidentally persist the real entity while building a preview
     private Education copyOf(Education source) {
         Education copy = new Education();
         copy.setId(source.getId());
@@ -345,7 +270,6 @@ public class EducationServiceImpl implements EducationService {
 
         copy.setTwelfthInstitutionName(source.getTwelfthInstitutionName());
         copy.setTwelfthBoardUniversity(source.getTwelfthBoardUniversity());
-//        copy.setTwelfthStream(source.getTwelfthStream());
         copy.setTwelfthRegistrationNumber(source.getTwelfthRegistrationNumber());
         copy.setTwelfthPassingYear(source.getTwelfthPassingYear());
         copy.setTwelfthPercentage(source.getTwelfthPercentage());
@@ -359,7 +283,6 @@ public class EducationServiceImpl implements EducationService {
         copy.setDegreeStartYear(source.getDegreeStartYear());
         copy.setDegreeEndYear(source.getDegreeEndYear());
         copy.setDegreePercentage(source.getDegreePercentage());
-//        copy.setBacklogStatus(source.getBacklogStatus());
         copy.setDegreeCertificateName(source.getDegreeCertificateName());
 
         copy.setMastersDegree(source.getMastersDegree());
@@ -367,12 +290,10 @@ public class EducationServiceImpl implements EducationService {
         copy.setMastersCollege(source.getMastersCollege());
         copy.setMastersUniversity(source.getMastersUniversity());
         copy.setMastersRegistrationNumber(source.getMastersRegistrationNumber());
-//        copy.setModeOfStudy(source.getModeOfStudy());
         copy.setMastersStartYear(source.getMastersStartYear());
         copy.setMastersEndYear(source.getMastersEndYear());
         copy.setMastersPercentage(source.getMastersPercentage());
         copy.setMastersMarksCardName(source.getMastersMarksCardName());
-//        copy.setMastersDegreeCertificateName(source.getMastersDegreeCertificateName());
 
         return copy;
     }
@@ -409,7 +330,6 @@ public class EducationServiceImpl implements EducationService {
                 setIfPresent(f, "twelfthInstitutionName", education::setTwelfthInstitutionName);
                 setIfPresent(f, "twelfthBoardUniversity", education::setTwelfthBoardUniversity);
                 setIfPresent(f, "twelfthLocation", education::setTwelfthLocation);
-//                setEnumIfPresent(f, "twelfthStream", education::setTwelfthStream, com.verify_x.enums.StreamType.class);
                 setIfPresent(f, "twelfthRegistrationNumber", education::setTwelfthRegistrationNumber);
                 setIntIfPresent(f, "twelfthPassingYear", education::setTwelfthPassingYear);
                 setDoubleIfPresent(f, "twelfthPercentage", education::setTwelfthPercentage);
@@ -548,11 +468,6 @@ public class EducationServiceImpl implements EducationService {
         return mapToResponse(saved);
     }
 
-//    @Override
-//    public EducationResponse updateEducation(EducationRequest request) {
-//        return null;
-//    }
-
     private void processAndApply(Education education, MultipartFile file, EducationDocumentType type) {
 
         validateFile(file);
@@ -563,6 +478,10 @@ public class EducationServiceImpl implements EducationService {
         applyExtractedFields(education, type, fields);
     }
 
+    /**
+     * Manual field update — used when the candidate edits fields by hand
+     * via form input rather than uploading a new document.
+     */
     @Override
     @Transactional
     public EducationResponse updateEducation(
@@ -585,172 +504,161 @@ public class EducationServiceImpl implements EducationService {
                     );
 
             if (request == null) {
-                throw new BadRequestException(
-                        "Education details are required."
-                );
+                throw new BadRequestException("Education details are required.");
             }
 
-            // Update ONLY fields provided in request
             updateEducationFields(education, request);
 
-            // Update 10th marks card only if new file is provided
-            if (tenthMarksCard != null &&
-                    !tenthMarksCard.isEmpty()) {
-
-                education.setTenthMarksCard(
-                        tenthMarksCard.getBytes()
-                );
+            if (tenthMarksCard != null && !tenthMarksCard.isEmpty()) {
+                education.setTenthMarksCard(tenthMarksCard.getBytes());
             }
 
-            // Update 12th marks card only if new file is provided
-            if (twelfthMarksCard != null &&
-                    !twelfthMarksCard.isEmpty()) {
-
-                education.setTwelfthMarksCard(
-                        twelfthMarksCard.getBytes()
-                );
+            if (twelfthMarksCard != null && !twelfthMarksCard.isEmpty()) {
+                education.setTwelfthMarksCard(twelfthMarksCard.getBytes());
             }
 
-            // Update degree certificate only if new file is provided
-            if (degreeCertificate != null &&
-                    !degreeCertificate.isEmpty()) {
-
-                education.setDegreeCertificate(
-                        degreeCertificate.getBytes()
-                );
+            if (degreeCertificate != null && !degreeCertificate.isEmpty()) {
+                education.setDegreeCertificate(degreeCertificate.getBytes());
             }
 
-            // Update masters marks card only if new file is provided
-            if (mastersMarksCard != null &&
-                    !mastersMarksCard.isEmpty()) {
-
-                education.setMastersMarksCard(
-                        mastersMarksCard.getBytes()
-                );
+            if (mastersMarksCard != null && !mastersMarksCard.isEmpty()) {
+                education.setMastersMarksCard(mastersMarksCard.getBytes());
             }
 
-            Education updatedEducation =
-                    educationRepository.save(education);
+            Education updatedEducation = educationRepository.save(education);
 
-            log.info(
-                    "Education details updated for candidate {}",
-                    candidate.getId()
-            );
+            log.info("Education details updated for candidate {}", candidate.getId());
 
             return mapToResponse(updatedEducation);
 
         } catch (IOException ex) {
-
-            log.error(
-                    "Failed to update education details.",
-                    ex
-            );
-
-            throw new RuntimeException(
-                    "Unable to update education details.",
-                    ex
-            );
+            log.error("Failed to update education details.", ex);
+            throw new RuntimeException("Unable to update education details.", ex);
         }
+    }
+
+    /**
+     * Document-driven update (NEW) — candidate uploads marksheet(s)/certificate(s),
+     * Gemini/local extraction runs, and the extracted fields overwrite the existing
+     * record's corresponding section. No manual EducationRequest needed.
+     */
+    @Override
+    @Transactional
+    public EducationResponse updateEducationFromDocuments(
+            MultipartFile tenthMarksCard,
+            MultipartFile twelfthMarksCard,
+            MultipartFile degreeCertificate,
+            MultipartFile mastersMarksCard) {
+
+        Candidate candidate = getLoggedInCandidate();
+
+        Education education = educationRepository.findByCandidate(candidate)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Education details not found. Save first before updating."));
+
+        try {
+
+            if (tenthMarksCard != null && !tenthMarksCard.isEmpty()) {
+                processAndApply(education, tenthMarksCard, EducationDocumentType.TENTH_MARKS_CARD);
+                saveFile(tenthMarksCard,
+                        education::setTenthMarksCard,
+                        education::setTenthMarksCardName,
+                        education::setTenthMarksCardContentType);
+            }
+
+            if (twelfthMarksCard != null && !twelfthMarksCard.isEmpty()) {
+                processAndApply(education, twelfthMarksCard, EducationDocumentType.TWELFTH_MARKS_CARD);
+                saveFile(twelfthMarksCard,
+                        education::setTwelfthMarksCard,
+                        education::setTwelfthMarksCardName,
+                        education::setTwelfthMarksCardContentType);
+            }
+
+            if (degreeCertificate != null && !degreeCertificate.isEmpty()) {
+                processAndApply(education, degreeCertificate, EducationDocumentType.DEGREE_CERTIFICATE);
+                saveFile(degreeCertificate,
+                        education::setDegreeCertificate,
+                        education::setDegreeCertificateName,
+                        education::setDegreeCertificateContentType);
+            }
+
+            if (mastersMarksCard != null && !mastersMarksCard.isEmpty()) {
+                processAndApply(education, mastersMarksCard, EducationDocumentType.MASTERS_MARKS_CARD);
+                saveFile(mastersMarksCard,
+                        education::setMastersMarksCard,
+                        education::setMastersMarksCardName,
+                        education::setMastersMarksCardContentType);
+            }
+
+        } catch (IOException ex) {
+            log.error("Failed to update education details from documents.", ex);
+            throw new RuntimeException("Unable to update education details from documents.", ex);
+        }
+
+        Education saved = educationRepository.save(education);
+
+        log.info("Auto-extracted and updated education details from documents for candidate {}", candidate.getId());
+
+        return mapToResponse(saved);
     }
 
     private void updateEducationFields(
             Education education,
             EducationRequest request) {
 
-        // Example:
-        // Only update when value is provided.
-        // If null, old database value remains unchanged.
-
         if (request.getTenthPercentage() != null) {
-            education.setTenthPercentage(
-                    request.getTenthPercentage()
-            );
+            education.setTenthPercentage(request.getTenthPercentage());
         }
 
         if (request.getTwelfthPercentage() != null) {
-            education.setTwelfthPercentage(
-                    request.getTwelfthPercentage()
-            );
+            education.setTwelfthPercentage(request.getTwelfthPercentage());
         }
 
         if (request.getDegreePercentage() != null) {
-            education.setDegreePercentage(
-                    request.getDegreePercentage()
-            );
+            education.setDegreePercentage(request.getDegreePercentage());
         }
 
         if (request.getMastersPercentage() != null) {
-            education.setMastersPercentage(
-                    request.getMastersPercentage()
-            );
+            education.setMastersPercentage(request.getMastersPercentage());
         }
 
         if (request.getTenthPassingYear() != null) {
-            education.setTenthPassingYear(
-                    request.getTenthPassingYear()
-            );
+            education.setTenthPassingYear(request.getTenthPassingYear());
         }
 
         if (request.getTwelfthPassingYear() != null) {
-            education.setTwelfthPassingYear(
-                    request.getTwelfthPassingYear()
-            );
+            education.setTwelfthPassingYear(request.getTwelfthPassingYear());
         }
 
         if (request.getDegreeEndYear() != null) {
-            education.setDegreeEndYear(
-                    request.getDegreeEndYear()
-            );
+            education.setDegreeEndYear(request.getDegreeEndYear());
         }
 
         if (request.getMastersEndYear() != null) {
-            education.setMastersEndYear(
-                    request.getMastersEndYear()
-            );
+            education.setMastersEndYear(request.getMastersEndYear());
         }
 
-        if (request.getTenthBoard() != null &&
-                !request.getTenthBoard().isBlank()) {
-
-            education.setTenthBoard(
-                    request.getTenthBoard()
-            );
+        if (request.getTenthBoard() != null && !request.getTenthBoard().isBlank()) {
+            education.setTenthBoard(request.getTenthBoard());
         }
 
-        if (request.getTwelfthBoardUniversity() != null &&
-                !request.getTwelfthBoardUniversity().isBlank()) {
-
-            education.setTwelfthBoardUniversity(
-                    request.getTwelfthBoardUniversity()
-            );
+        if (request.getTwelfthBoardUniversity() != null && !request.getTwelfthBoardUniversity().isBlank()) {
+            education.setTwelfthBoardUniversity(request.getTwelfthBoardUniversity());
         }
 
-        if (request.getUniversityName() != null &&
-                !request.getUniversityName().isBlank()) {
-
-            education.setUniversityName(
-                    request.getUniversityName()
-            );
+        if (request.getUniversityName() != null && !request.getUniversityName().isBlank()) {
+            education.setUniversityName(request.getUniversityName());
         }
 
-        if (request.getDegreeName() != null &&
-                !request.getDegreeName().isBlank()) {
-
-            education.setDegreeName(
-                    request.getDegreeName());
+        if (request.getDegreeName() != null && !request.getDegreeName().isBlank()) {
+            education.setDegreeName(request.getDegreeName());
         }
 
-
-        if (request.getMastersDegree() != null &&
-                !request.getMastersDegree().isBlank()) {
-
-            education.setMastersDegree(
-                    request.getMastersDegree()
-            );
+        if (request.getMastersDegree() != null && !request.getMastersDegree().isBlank()) {
+            education.setMastersDegree(request.getMastersDegree());
         }
 
-        if (request.getMastersCollege() != null &&
-                !request.getMastersCollege().isBlank()) {
+        if (request.getMastersCollege() != null && !request.getMastersCollege().isBlank()) {
             education.setMastersCollege(request.getMastersCollege());
         }
 
@@ -785,6 +693,5 @@ public class EducationServiceImpl implements EducationService {
 
         log.info("Education deleted for candidate {}", candidate.getId());
     }
-
 
 }
