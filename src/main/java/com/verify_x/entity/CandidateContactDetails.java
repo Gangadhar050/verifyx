@@ -132,6 +132,12 @@ public class CandidateContactDetails {
             columnDefinition = "TEXT"
     )
     private String currentAddress;
+    // Add these near currentAddress:
+    @Column(name = "current_address_line1", length = 500)
+    private String currentAddressLine1;
+
+    @Column(name = "current_area_locality", length = 255)
+    private String currentAreaLocality;
 
     @Column(
             name = "current_pincode",

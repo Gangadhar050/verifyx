@@ -239,6 +239,16 @@ public class CandidateContactDetailsServiceImpl
                 request.getLatitude(),
                 request.getLongitude()
         );
+        if (!request.isLocationConfirmed()) {
+            throw new BadRequestException(
+                    "Please confirm that the live photo and location are accurate."
+            );
+        }
+        if (!request.isPhotoConfirmed()) {
+            throw new BadRequestException(
+                    "Please confirm the photo clearly shows the front or entrance of your house."
+            );
+        }
 
         validatePhoto(photo);
 
@@ -293,7 +303,8 @@ public class CandidateContactDetailsServiceImpl
             details.setCurrentCity(
                     addressData.city()
             );
-
+            details.setCurrentAddressLine1(addressData.addressLine1());
+            details.setCurrentAreaLocality(addressData.areaLocality());
             details.setCurrentDistrict(
                     addressData.district()
             );

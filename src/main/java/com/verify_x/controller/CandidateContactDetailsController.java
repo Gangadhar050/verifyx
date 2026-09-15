@@ -1,14 +1,17 @@
 package com.verify_x.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verify_x.dto.CandidateContactDetailsRequest;
 import com.verify_x.dto.CandidateContactDetailsResponse;
 import com.verify_x.dto.CurrentAddressRequest;
+import com.verify_x.exception.BadRequestException;
 import com.verify_x.payload.ApiResponse;
 import com.verify_x.services.CandidateContactDetailsService;
 
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -21,10 +24,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/candidate/contact-details")
 @RequiredArgsConstructor
+@Slf4j
 public class CandidateContactDetailsController {
 
-    private final CandidateContactDetailsService
-            candidateContactDetailsService;
+    private final CandidateContactDetailsService candidateContactDetailsService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     // =========================================================
@@ -33,25 +38,18 @@ public class CandidateContactDetailsController {
 
     @PostMapping
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<
-            ApiResponse<CandidateContactDetailsResponse>>
-    createDetails(
-            @Valid
-            @RequestBody
-            CandidateContactDetailsRequest request) {
+    public ResponseEntity<ApiResponse<CandidateContactDetailsResponse>> createDetails(
+            @Valid @RequestBody CandidateContactDetailsRequest request) {
 
         CandidateContactDetailsResponse response =
-                candidateContactDetailsService
-                        .createDetails(request);
+                candidateContactDetailsService.createDetails(request);
 
         return ResponseEntity
                 .status(201)
-                .body(
-                        ApiResponse.success(
-                                "Permanent address and contact details saved successfully.",
-                                response
-                        )
-                );
+                .body(ApiResponse.success(
+                        "Permanent address and contact details saved successfully.",
+                        response
+                ));
     }
 
 
@@ -61,28 +59,21 @@ public class CandidateContactDetailsController {
 
     @PutMapping
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<
-            ApiResponse<CandidateContactDetailsResponse>>
-    updateDetails(
-            @Valid
-            @RequestBody
-            CandidateContactDetailsRequest request) {
+    public ResponseEntity<ApiResponse<CandidateContactDetailsResponse>> updateDetails(
+            @Valid @RequestBody CandidateContactDetailsRequest request) {
 
         CandidateContactDetailsResponse response =
-                candidateContactDetailsService
-                        .updateDetails(request);
+                candidateContactDetailsService.updateDetails(request);
 
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Permanent address and contact details updated successfully.",
-                        response
-                )
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Permanent address and contact details updated successfully.",
+                response
+        ));
     }
 
 
     // =========================================================
-    // CURRENT ADDRESS GPS + PHOTO
+    // CURRENT ADDRESS - GPS + LIVE PHOTO
     // =========================================================
 
     @PostMapping(
@@ -90,29 +81,41 @@ public class CandidateContactDetailsController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<
-            ApiResponse<CandidateContactDetailsResponse>>
-    updateCurrentAddress(
+    public ResponseEntity<ApiResponse<CandidateContactDetailsResponse>> updateCurrentAddress(
 
-            @RequestPart("data")
-            CurrentAddressRequest request,
+            @RequestPart("data") String requestJson,
 
-            @RequestPart("photo")
-            MultipartFile photo) {
+            @RequestPart("photo") MultipartFile photo) {
+
+        if (requestJson == null || requestJson.isBlank()) {
+            throw new BadRequestException(
+                    "GPS location data ('data' part) is required."
+            );
+        }
+
+        if (photo == null || photo.isEmpty()) {
+            throw new BadRequestException(
+                    "Live address-proof photo is required."
+            );
+        }
+
+        CurrentAddressRequest request;
+        try {
+            request = objectMapper.readValue(requestJson, CurrentAddressRequest.class);
+        } catch (Exception ex) {
+            log.warn("Failed to parse current-address JSON payload: {}", requestJson, ex);
+            throw new BadRequestException(
+                    "Invalid JSON for current address data: " + ex.getMessage()
+            );
+        }
 
         CandidateContactDetailsResponse response =
-                candidateContactDetailsService
-                        .updateCurrentAddress(
-                                request,
-                                photo
-                        );
+                candidateContactDetailsService.updateCurrentAddress(request, photo);
 
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Current address captured successfully.",
-                        response
-                )
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Current address and live photo captured successfully.",
+                response
+        ));
     }
 
 
@@ -122,20 +125,15 @@ public class CandidateContactDetailsController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<
-            ApiResponse<CandidateContactDetailsResponse>>
-    getMyDetails() {
+    public ResponseEntity<ApiResponse<CandidateContactDetailsResponse>> getMyDetails() {
 
         CandidateContactDetailsResponse response =
-                candidateContactDetailsService
-                        .getMyDetails();
+                candidateContactDetailsService.getMyDetails();
 
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Candidate contact and address details fetched successfully.",
-                        response
-                )
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Candidate contact and address details fetched successfully.",
+                response
+        ));
     }
 
 
@@ -145,23 +143,16 @@ public class CandidateContactDetailsController {
 
     @GetMapping("/candidate/{candidateId}")
     @PreAuthorize("hasAnyRole('HR','ADMIN')")
-    public ResponseEntity<
-            ApiResponse<CandidateContactDetailsResponse>>
-    getDetailsByCandidateId(
+    public ResponseEntity<ApiResponse<CandidateContactDetailsResponse>> getDetailsByCandidateId(
             @PathVariable Long candidateId) {
 
         CandidateContactDetailsResponse response =
-                candidateContactDetailsService
-                        .getDetailsByCandidateId(
-                                candidateId
-                        );
+                candidateContactDetailsService.getDetailsByCandidateId(candidateId);
 
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Candidate contact and address details fetched successfully.",
-                        response
-                )
-        );
+        return ResponseEntity.ok(ApiResponse.success(
+                "Candidate contact and address details fetched successfully.",
+                response
+        ));
     }
 
 
@@ -171,24 +162,15 @@ public class CandidateContactDetailsController {
 
     @GetMapping("/candidate/{candidateId}/current-address-photo")
     @PreAuthorize("hasAnyRole('HR','ADMIN')")
-    public ResponseEntity<Resource>
-    getCurrentAddressPhoto(
+    public ResponseEntity<Resource> getCurrentAddressPhoto(
             @PathVariable Long candidateId) {
 
         Resource resource =
-                candidateContactDetailsService
-                        .getCurrentAddressPhoto(
-                                candidateId
-                        );
+                candidateContactDetailsService.getCurrentAddressPhoto(candidateId);
 
         return ResponseEntity.ok()
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "inline"
-                )
-                .contentType(
-                        MediaType.APPLICATION_OCTET_STREAM
-                )
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
 }

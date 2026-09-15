@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ public class CandidateServiceImpl implements CandidateService {
     private final EmploymentRepository employmentRepository;
 
     @Override
+//    @Cacheable(cacheNames = "candidateProfiles", key = "#userId")
     public CandidateProfileDto getCandidateProfile(Long userId) {
 
         Candidate user = candidateRepository.findById(userId)

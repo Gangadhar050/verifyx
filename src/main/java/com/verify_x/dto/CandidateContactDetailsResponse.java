@@ -55,6 +55,10 @@ public class CandidateContactDetailsResponse {
 
     private String currentState;
 
+    private String currentAddressLine1;
+
+    private String currentAreaLocality;
+
     private String currentCountry;
 
     private Double currentLatitude;

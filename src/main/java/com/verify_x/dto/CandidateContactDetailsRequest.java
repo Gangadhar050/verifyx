@@ -57,20 +57,7 @@ public class CandidateContactDetailsRequest {
     @Size(max = 100)
     private String permanentCountry;
 
-    /**
-     * These are supplied when address is fetched
-     * from Google Maps.
-     *
-     * They can be null for manual address entry.
-     */
-//    private Double permanentLatitude;
-//
-//    private Double permanentLongitude;
 
-
-    // =========================================================
-    // EMERGENCY CONTACT
-    // =========================================================
 
     @NotBlank(message = "Emergency contact number is required.")
     @Pattern(
@@ -80,9 +67,7 @@ public class CandidateContactDetailsRequest {
     private String emergencyContactNumber;
 
 
-    // =========================================================
-    // REFERRAL CONTACT - OPTIONAL
-    // =========================================================
+
 
     @Pattern(
             regexp = "^$|^[6-9][0-9]{9}$",
