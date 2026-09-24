@@ -1,10 +1,11 @@
 package com.verify_x.dto;
 
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,19 +14,33 @@ import lombok.*;
 @Builder
 public class CurrentAddressRequest {
 
-    @NotNull(message = "Current latitude is required.")
-    @DecimalMin(value = "-90.0", message = "Invalid latitude.")
-    @DecimalMax(value = "90.0", message = "Invalid latitude.")
-    private Double latitude;
+    @NotBlank(message = "Current address line 1 is required.")
+    private String currentAddressLine1;
 
-    @NotNull(message = "Current longitude is required.")
-    @DecimalMin(value = "-180.0", message = "Invalid longitude.")
-    @DecimalMax(value = "180.0", message = "Invalid longitude.")
-    private Double longitude;
+    private String currentAddressLine2;
 
-    @AssertTrue(message = "You must confirm the live photo and location are accurate.")
-    private boolean locationConfirmed;
+    private String currentAreaLocality;
 
-    @AssertTrue(message = "You must confirm the photo clearly shows the front/entrance of your house.")
-    private boolean photoConfirmed;
+    @NotBlank(message = "Current pincode is required.")
+    private String currentPincode;
+
+    @NotBlank(message = "Current city is required.")
+    private String currentCity;
+
+    private String currentDistrict;
+
+    @NotBlank(message = "Current state is required.")
+    private String currentState;
+
+    @NotBlank(message = "Current country is required.")
+    private String currentCountry;
+private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+//    @DecimalMin(value = "-90.0", message = "Invalid latitude.")
+//    @DecimalMax(value = "90.0", message = "Invalid latitude.")
+//    private Double currentLatitude;
+//
+//    @DecimalMin(value = "-180.0", message = "Invalid longitude.")
+//    @DecimalMax(value = "180.0", message = "Invalid longitude.")
+//    private Double currentLongitude;
 }

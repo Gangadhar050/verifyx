@@ -1,6 +1,6 @@
 package com.verify_x.payload;
 
-import com.verify_x.dto.CandidateContactDetailsResponse;
+
 import com.verify_x.dto.CandidateDocumentDto;
 import com.verify_x.dto.CandidateEducationDto;
 import com.verify_x.dto.CandidateProfileDto;
@@ -62,10 +62,5 @@ public class ApiResponse<T> {
         this.timeStamp = LocalDateTime.now();
     }
 
-    public static ApiResponse<CandidateContactDetailsResponse> failure(String s) {
-        return ApiResponse.<CandidateContactDetailsResponse>builder()
-                .success(false)
-                .message(s)
-                .build();
-    }
+
 }

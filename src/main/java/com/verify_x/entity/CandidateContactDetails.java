@@ -2,6 +2,8 @@ package com.verify_x.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -47,222 +49,37 @@ public class CandidateContactDetails {
     )
     private Candidate candidate;
 
-
-    // =========================================================
-    // PERMANENT ADDRESS
-    // =========================================================
-
-    @Column(
-            name = "permanent_address_line1",
-            nullable = false,
-            length = 500
-    )
+    // Permanent
     private String permanentAddressLine1;
-
-    @Column(
-            name = "permanent_address_line2",
-            length = 500
-    )
     private String permanentAddressLine2;
-
-    @Column(
-            name = "permanent_area_locality",
-            length = 255
-    )
     private String permanentAreaLocality;
-
-    @Column(
-            name = "permanent_pincode",
-            nullable = false,
-            length = 10
-    )
     private String permanentPincode;
-
-    @Column(
-            name = "permanent_city",
-            nullable = false,
-            length = 100
-    )
     private String permanentCity;
-
-    @Column(
-            name = "permanent_district",
-            length = 100
-    )
     private String permanentDistrict;
-
-    @Column(
-            name = "permanent_state",
-            nullable = false,
-            length = 100
-    )
     private String permanentState;
-
-    @Column(
-            name = "permanent_country",
-            nullable = false,
-            length = 100
-    )
     private String permanentCountry;
-
-    /**
-     * Coordinates returned by Google Maps when
-     * candidate selects a permanent address.
-     *
-     * They can be null when candidate enters
-     * address manually.
-     */
-//    @Column(name = "permanent_latitude")
-//    private Double permanentLatitude;
-//
-//    @Column(name = "permanent_longitude")
-//    private Double permanentLongitude;
-
-
-    // =========================================================
-    // CURRENT ADDRESS
-    // =========================================================
-
-    /**
-     * Address generated from GPS coordinates
-     * using reverse geocoding.
-     */
-    @Column(
-            name = "current_address",
-            columnDefinition = "TEXT"
-    )
-    private String currentAddress;
-    // Add these near currentAddress:
-    @Column(name = "current_address_line1", length = 500)
-    private String currentAddressLine1;
-
-    @Column(name = "current_area_locality", length = 255)
-    private String currentAreaLocality;
-
-    @Column(
-            name = "current_pincode",
-            length = 10
-    )
-    private String currentPincode;
-
-    @Column(
-            name = "current_city",
-            length = 100
-    )
-    private String currentCity;
-
-    @Column(
-            name = "current_district",
-            length = 100
-    )
-    private String currentDistrict;
-
-    @Column(
-            name = "current_state",
-            length = 100
-    )
-    private String currentState;
-
-    @Column(
-            name = "current_country",
-            length = 100
-    )
-    private String currentCountry;
-
-    /**
-     * GPS coordinates captured from browser/device.
-     */
-    @Column(
-            name = "current_latitude"
-    )
-    private Double currentLatitude;
-
-    @Column(
-            name = "current_longitude"
-    )
-    private Double currentLongitude;
-
-    /**
-     * Current-address live photo.
-     *
-     * Maximum allowed by service: 5 MB.
-     */
-    @Lob
-    @Column(
-            name = "current_address_photo",
-            columnDefinition = "LONGBLOB"
-    )
-    private byte[] currentAddressPhoto;
-
-    @Column(
-            name = "current_address_photo_name",
-
-            length = 255
-    )
-    private String currentAddressPhotoName;
-
-    @Column(
-            name = "current_address_photo_content_type",
-            length = 100
-    )
-    private String currentAddressPhotoContentType;
-
-
-    // =========================================================
-    // CONTACT NUMBERS
-    // =========================================================
-
-    @Column(
-            name = "emergency_contact_number",
-            nullable = false,
-            length = 15
-    )
     private String emergencyContactNumber;
-
-    /**
-     * Referral contact is optional.
-     */
-    @Column(
-            name = "referral_contact_number",
-            length = 15
-    )
     private String referralContactNumber;
 
+    // Current
+    private String currentAddress;
+    private String currentAddressLine1;
+    private String currentAddressLine2;
+    private String currentAreaLocality;
+    private String currentPincode;
+    private String currentCity;
+    private String currentDistrict;
+    private String currentState;
+    private String currentCountry;
+//    private Double currentLatitude;
+//    private Double currentLongitude;
 
-    // =========================================================
-    // AUDIT
-    // =========================================================
-
-    @Column(
-            name = "created_at",
-            nullable = false,
-            updatable = false
-    )
+    // Audit
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(
-            name = "updated_at",
-            nullable = false
-    )
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-
-    // =========================================================
-    // JPA CALLBACKS
-    // =========================================================
-
-    @PrePersist
-    protected void onCreate() {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        createdAt = now;
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-
-        updatedAt = LocalDateTime.now();
-    }
 }
