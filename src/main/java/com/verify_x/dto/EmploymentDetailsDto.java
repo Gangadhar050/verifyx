@@ -1,7 +1,8 @@
 package com.verify_x.dto;
 
 import com.verify_x.enums.EmploymentStatus;
-import com.verify_x.enums.OfferLetterStatus;
+import com.verify_x.enums.NoticePeriodStatus;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -14,47 +15,77 @@ import java.time.LocalDate;
 public class EmploymentDetailsDto {
 
     /*
-     * Previous Employment Details
+     * Employment Status
      */
 
-    private String previousCompanyName;
-
-    private String previousDesignation;
-
-    private Double totalExperience;
-
-    private Double lastCTC;
-
-    private LocalDate lastWorkingDay;
-
-    private String uanNumber;
-
-    /*
-     * Current Employment Details
-     */
-
+    @NotNull(message = "Employment status is required.")
     private EmploymentStatus employmentStatus;
 
-    private String currentCompany;
-
-    private String currentDesignation;
-
-    private Double currentCTC;
-
-    private Integer noticePeriod;
-
     /*
-     * Offer Letter Details
+     * ===========================
+     * CURRENT EMPLOYMENT
+     * ===========================
      */
 
-    private OfferLetterStatus offerLetterStatus;
+    @Size(max = 100)
+    private String currentCompany;
 
-//    private String offerCompanyName;
-//
-//    private Double offeredCTC;
-//
-//    private LocalDate joiningDate;
-//
-//    private String offerReferenceNumber;
+    @Size(max = 100)
+    private String currentDesignation;
+
+    @Positive(message = "Current CTC must be greater than zero.")
+    private Double currentCTC;
+
+    private LocalDate workingFrom;
+
+    /*
+     * ===========================
+     * NOTICE PERIOD
+     * ===========================
+     */
+
+    private NoticePeriodStatus noticePeriodStatus;
+
+    @Positive(message = "Official notice period must be greater than zero.")
+    private Integer officialNoticePeriod;
+
+    private LocalDate lastWorkingDate;
+
+    /*
+     * ===========================
+     * PREVIOUS EMPLOYMENT
+     * ===========================
+     */
+
+    @Size(max = 100)
+    private String previousCompanyName;
+
+    @Size(max = 100)
+    private String previousDesignation;
+
+    private LocalDate previousWorkingFrom;
+
+    private LocalDate previousWorkingTo;
+
+    @Positive(message = "Previous CTC must be greater than zero.")
+    private Double previousCTC;
+
+    @Positive(message = "Expected CTC must be greater than zero.")
+    private Double expectedCTC;
+
+    @Positive(message = "Experience must be greater than zero.")
+    private Double totalExperience;
+
+    /*
+     * ===========================
+     * UAN
+     * ===========================
+     */
+
+    @Pattern(
+            regexp = "^\\d{12}$",
+            message = "UAN must contain exactly 12 digits."
+    )
+    private String uanNumber;
 
 }

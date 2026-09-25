@@ -327,9 +327,9 @@ public class CandidateManagementServiceImpl
 
                             .totalExperience(employment.getTotalExperience())
 
-                            .lastCTC(employment.getLastCTC())
+                            .previousCTC(employment.getPreviousCTC())
 
-                            .lastWorkingDay(employment.getLastWorkingDay())
+                            .lastWorkingDate(employment.getLastWorkingDate())
 
                             .uanNumber(employment.getUanNumber())
 
@@ -340,10 +340,9 @@ public class CandidateManagementServiceImpl
                             .currentDesignation(employment.getCurrentDesignation())
 
                             .currentCTC(employment.getCurrentCTC())
-
-                            .noticePeriod(employment.getNoticePeriod())
-
-                            .offerLetterStatus(employment.getOfferLetterStatus())
+                            .noticePeriodStatus(employment.getNoticePeriodStatus())
+//                            .noticePerio(employment.getNoticePeriod())
+//                            .offerLetterStatus(employment.getOfferLetterStatus())
 
 //                            .offerCompanyName(employment.getOfferCompanyName())
 //

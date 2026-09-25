@@ -114,4 +114,22 @@ public class EmploymentController {
                         .build()
         );
     }
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<EmploymentDetailsDto>> getMyEmploymentDetails() {
+
+        return ResponseEntity.ok(
+
+                ApiResponse.<EmploymentDetailsDto>builder()
+
+                        .success(true)
+
+                        .message("Employment details fetched successfully.")
+
+                        .data(
+                                employmentService.getEmploymentDetails()
+                        )
+
+                        .build()
+        );
+    }
 }

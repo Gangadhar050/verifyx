@@ -3,17 +3,18 @@ package com.verify_x.serviceImpl;
 import com.verify_x.dto.EmploymentDetailsDto;
 import com.verify_x.entity.Candidate;
 import com.verify_x.entity.Employment;
-
-import com.verify_x.enums.CandidateType;
 import com.verify_x.enums.EmploymentStatus;
-import com.verify_x.enums.OfferLetterStatus;
+import com.verify_x.enums.NoticePeriodStatus;
+import com.verify_x.enums.VerificationStatus;
+import com.verify_x.exception.BadRequestException;
+import com.verify_x.exception.ResourceNotFoundException;
 import com.verify_x.jwt.UserPrincipal;
 import com.verify_x.repository.CandidateRepository;
 import com.verify_x.repository.EmploymentRepository;
-
 import com.verify_x.services.EmploymentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,39 +25,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class EmploymentServiceImpl implements EmploymentService {
 
     private final EmploymentRepository employmentRepository;
     private final CandidateRepository candidateRepository;
 
-
-    private EmploymentDetailsDto mapToDto(Employment employment){
-
-        return EmploymentDetailsDto.builder()
-
-                .previousCompanyName(employment.getPreviousCompanyName())
-                .previousDesignation(employment.getPreviousDesignation())
-                .totalExperience(employment.getTotalExperience())
-                .lastCTC(employment.getLastCTC())
-                .lastWorkingDay(employment.getLastWorkingDay())
-                .uanNumber(employment.getUanNumber())
-
-                .employmentStatus(employment.getEmploymentStatus())
-                .currentCompany(employment.getCurrentCompany())
-                .currentDesignation(employment.getCurrentDesignation())
-                .currentCTC(employment.getCurrentCTC())
-                .noticePeriod(employment.getNoticePeriod())
-
-                .offerLetterStatus(employment.getOfferLetterStatus())
-//                .offerCompanyName(employment.getOfferCompanyName())
-//                .offeredCTC(employment.getOfferedCTC())
-//                .joiningDate(employment.getJoiningDate())
-//                .offerReferenceNumber(employment.getOfferReferenceNumber())
-
-                .build();
-    }
-    @Override
-    public void saveEmploymentDetails(EmploymentDetailsDto dto) {
+    private Candidate getLoggedInCandidate() {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
@@ -64,232 +39,577 @@ public class EmploymentServiceImpl implements EmploymentService {
         UserPrincipal principal =
                 (UserPrincipal) authentication.getPrincipal();
 
-        Candidate candidate = candidateRepository.findById(principal.getUserId())
+        return candidateRepository.findById(principal.getUserId())
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("Candidate not found"));
+                        new UsernameNotFoundException("Candidate not found."));
+    }
 
-        validateEmploymentDetails(candidate, dto);
+    private void validateEmployment(EmploymentDetailsDto dto) {
 
-        Employment employment = employmentRepository
-                .findByCandidate(candidate)
-                .orElse(new Employment());
+        if (dto.getEmploymentStatus() == null) {
 
-        employment.setCandidate(candidate);
+            throw new BadRequestException(
+                    "Employment Status is required.");
+        }
 
+        if (dto.getEmploymentStatus() ==
+                EmploymentStatus.CURRENTLY_EMPLOYED) {
 
-        // Candidate Type
-        if (candidate.getCandidateType() == CandidateType.EXPERIENCED) {
+            validateCurrentEmployment(dto);
 
-            employment.setPreviousCompanyName(dto.getPreviousCompanyName());
-            employment.setPreviousDesignation(dto.getPreviousDesignation());
-            employment.setTotalExperience(dto.getTotalExperience());
-            employment.setLastCTC(dto.getLastCTC());
-            employment.setLastWorkingDay(dto.getLastWorkingDay());
-            employment.setUanNumber(dto.getUanNumber());
+        } else {
 
-            employment.setEmploymentStatus(dto.getEmploymentStatus());
+            validatePreviousEmployment(dto);
+        }
 
-            if (dto.getEmploymentStatus() == EmploymentStatus.CURRENTLY_EMPLOYED) {
+    }
 
-                employment.setCurrentCompany(dto.getCurrentCompany());
-                employment.setCurrentDesignation(dto.getCurrentDesignation());
-                employment.setCurrentCTC(dto.getCurrentCTC());
-                employment.setNoticePeriod(dto.getNoticePeriod());
+    private void validateCurrentEmployment(
+            EmploymentDetailsDto dto) {
 
-            } else {
+        if (isBlank(dto.getCurrentCompany())) {
 
-                employment.setCurrentCompany(null);
-                employment.setCurrentDesignation(null);
-                employment.setCurrentCTC(0.0);
-                employment.setNoticePeriod(null);
+            throw new BadRequestException(
+                    "Current Company is required.");
+        }
+
+        if (isBlank(dto.getCurrentDesignation())) {
+
+            throw new BadRequestException(
+                    "Current Designation is required.");
+        }
+
+        if (dto.getCurrentCTC() == null) {
+
+            throw new BadRequestException(
+                    "Current CTC is required.");
+        }
+
+        if (dto.getWorkingFrom() == null) {
+
+            throw new BadRequestException(
+                    "Working From date is required.");
+        }
+
+        if (dto.getNoticePeriodStatus() == null) {
+
+            throw new BadRequestException(
+                    "Notice Period is required.");
+        }
+
+        if (dto.getNoticePeriodStatus()
+                == NoticePeriodStatus.YES) {
+
+            if (dto.getLastWorkingDate() == null) {
+
+                throw new BadRequestException(
+                        "Last Working Date is required.");
             }
 
         } else {
 
-            // Fresher
+            if (dto.getOfficialNoticePeriod() == null) {
+
+                throw new BadRequestException(
+                        "Official Notice Period is required.");
+            }
+
+        }
+
+    }
+
+    private void validatePreviousEmployment(
+            EmploymentDetailsDto dto) {
+
+        if (isBlank(dto.getPreviousCompanyName())) {
+
+            throw new BadRequestException(
+                    "Previous Company is required.");
+        }
+
+        if (isBlank(dto.getPreviousDesignation())) {
+
+            throw new BadRequestException(
+                    "Previous Designation is required.");
+        }
+
+        if (dto.getPreviousWorkingFrom() == null) {
+
+            throw new BadRequestException(
+                    "Previous Working From is required.");
+        }
+
+        if (dto.getPreviousWorkingTo() == null) {
+
+            throw new BadRequestException(
+                    "Previous Working To is required.");
+        }
+
+        if (dto.getPreviousCTC() == null) {
+
+            throw new BadRequestException(
+                    "Previous CTC is required.");
+        }
+
+        if (dto.getExpectedCTC() == null) {
+
+            throw new BadRequestException(
+                    "Expected CTC is required.");
+        }
+
+        if (dto.getTotalExperience() == null) {
+
+            throw new BadRequestException(
+                    "Experience is required.");
+        }
+
+        if (isBlank(dto.getUanNumber())) {
+
+            throw new BadRequestException(
+                    "UAN Number is required.");
+        }
+
+    }
+
+    private boolean isBlank(String value) {
+
+        return value == null || value.trim().isEmpty();
+
+    }
+
+    private void mapDtoToEntity(
+            Employment employment,
+            EmploymentDetailsDto dto) {
+
+        employment.setEmploymentStatus(
+                dto.getEmploymentStatus());
+
+        if (dto.getEmploymentStatus() ==
+                EmploymentStatus.CURRENTLY_EMPLOYED) {
+
+            employment.setCurrentCompany(
+                    dto.getCurrentCompany());
+
+            employment.setCurrentDesignation(
+                    dto.getCurrentDesignation());
+
+            employment.setCurrentCTC(
+                    dto.getCurrentCTC());
+
+            employment.setWorkingFrom(
+                    dto.getWorkingFrom());
+
+            employment.setNoticePeriodStatus(
+                    dto.getNoticePeriodStatus());
+
+            employment.setOfficialNoticePeriod(
+                    dto.getOfficialNoticePeriod());
+
+            employment.setLastWorkingDate(
+                    dto.getLastWorkingDate());
+
+            /*
+             * Clear Previous Details
+             */
+
             employment.setPreviousCompanyName(null);
             employment.setPreviousDesignation(null);
+            employment.setPreviousWorkingFrom(null);
+            employment.setPreviousWorkingTo(null);
+            employment.setPreviousCTC(null);
+            employment.setExpectedCTC(null);
             employment.setTotalExperience(null);
-            employment.setLastCTC(null);
-            employment.setLastWorkingDay(null);
             employment.setUanNumber(null);
 
-            employment.setEmploymentStatus(null);
+        } else {
+
+            employment.setPreviousCompanyName(
+                    dto.getPreviousCompanyName());
+
+            employment.setPreviousDesignation(
+                    dto.getPreviousDesignation());
+
+            employment.setPreviousWorkingFrom(
+                    dto.getPreviousWorkingFrom());
+
+            employment.setPreviousWorkingTo(
+                    dto.getPreviousWorkingTo());
+
+            employment.setPreviousCTC(
+                    dto.getPreviousCTC());
+
+            employment.setExpectedCTC(
+                    dto.getExpectedCTC());
+
+            employment.setTotalExperience(
+                    dto.getTotalExperience());
+
+            employment.setUanNumber(
+                    dto.getUanNumber());
+
+            /*
+             * Clear Current Details
+             */
 
             employment.setCurrentCompany(null);
             employment.setCurrentDesignation(null);
             employment.setCurrentCTC(null);
-            employment.setNoticePeriod(null);
+            employment.setWorkingFrom(null);
+            employment.setNoticePeriodStatus(null);
+            employment.setOfficialNoticePeriod(null);
+            employment.setLastWorkingDate(null);
+
         }
 
+    }
+    private EmploymentDetailsDto mapEntityToDto(Employment employment) {
 
-        // Offer Letter
-//        employment.setOfferLetterStatus(dto.getOfferLetterStatus());
-//
-//        if (dto.getOfferLetterStatus() == OfferLetterStatus.HOLDING_OFFER_LETTER) {
-//
-//            employment.setOfferCompanyName(dto.getOfferCompanyName());
-//            employment.setOfferedCTC(dto.getOfferedCTC());
-//            employment.setJoiningDate(dto.getJoiningDate());
-//            employment.setOfferReferenceNumber(dto.getOfferReferenceNumber());
-//
-//        } else {
-//
-//            employment.setOfferCompanyName(null);
-//            employment.setOfferedCTC(null);
-//            employment.setJoiningDate(null);
-//            employment.setOfferReferenceNumber(null);
-//        }
+        return EmploymentDetailsDto.builder()
 
+                .employmentStatus(employment.getEmploymentStatus())
+
+                /*
+                 * Current Employment
+                 */
+
+                .currentCompany(employment.getCurrentCompany())
+
+                .currentDesignation(employment.getCurrentDesignation())
+
+                .currentCTC(employment.getCurrentCTC())
+
+                .workingFrom(employment.getWorkingFrom())
+
+                /*
+                 * Notice Period
+                 */
+
+                .noticePeriodStatus(employment.getNoticePeriodStatus())
+
+                .officialNoticePeriod(
+                        employment.getOfficialNoticePeriod())
+
+                .lastWorkingDate(
+                        employment.getLastWorkingDate())
+
+                /*
+                 * Previous Employment
+                 */
+
+                .previousCompanyName(
+                        employment.getPreviousCompanyName())
+
+                .previousDesignation(
+                        employment.getPreviousDesignation())
+
+                .previousWorkingFrom(
+                        employment.getPreviousWorkingFrom())
+
+                .previousWorkingTo(
+                        employment.getPreviousWorkingTo())
+
+                .previousCTC(
+                        employment.getPreviousCTC())
+
+                .expectedCTC(
+                        employment.getExpectedCTC())
+
+                .totalExperience(
+                        employment.getTotalExperience())
+
+                /*
+                 * UAN
+                 */
+
+                .uanNumber(
+                        employment.getUanNumber())
+
+                .build();
+
+    }
+    @Override
+    public void saveEmploymentDetails(EmploymentDetailsDto dto) {
+
+        Candidate candidate = getLoggedInCandidate();
+
+        /*
+         * Prevent Duplicate Employment Record
+         */
+
+        if (employmentRepository.existsByCandidate(candidate)) {
+
+            throw new BadRequestException(
+                    "Employment details already exist. Please use Update.");
+        }
+
+        /*
+         * Validate Business Rules
+         */
+
+        validateEmployment(dto);
+
+        /*
+         * Create Entity
+         */
+
+        Employment employment = new Employment();
+
+        employment.setCandidate(candidate);
+
+        /*
+         * Map DTO → Entity
+         */
+
+        mapDtoToEntity(employment, dto);
+
+        /*
+         * Default UAN Verification
+         */
+
+        employment.setUanVerified(false);
+
+        /*
+         * Save
+         */
+        if (dto.getPreviousWorkingFrom() != null
+
+                && dto.getPreviousWorkingTo() != null
+                && dto.getPreviousWorkingTo()
+                .isBefore(dto.getPreviousWorkingFrom())) {
+
+            throw new BadRequestException(
+                    "Previous Working To cannot be before Previous Working From.");
+        }
+        if (dto.getWorkingFrom() != null
+                && dto.getLastWorkingDate() != null
+                && dto.getLastWorkingDate()
+                .isBefore(dto.getWorkingFrom())) {
+
+            throw new BadRequestException(
+                    "Last Working Date cannot be before Working From.");
+        }
         employmentRepository.save(employment);
+
+        log.info(
+                "Employment details created successfully for candidate {}",
+                candidate.getEmail());
+
     }
 
     @Override
     public void updateEmploymentDetails(EmploymentDetailsDto dto) {
 
-        saveEmploymentDetails(dto);
+        /*
+         * Logged-in Candidate
+         */
+        Candidate candidate = getLoggedInCandidate();
 
-    }
+        /*
+         * Existing Employment
+         */
+        Employment employment =
+                employmentRepository.findByCandidate(candidate)
 
-    @Override
-    public EmploymentDetailsDto getEmploymentDetailsByCandidateId(Long candidateId) {
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Employment details not found."
+                                ));
 
-        Employment employment = employmentRepository.findByCandidateId(candidateId)
-                .orElseThrow(() ->
-                        new RuntimeException("Employment details not found"));
+        /*
+         * Validate
+         */
+        validateEmployment(dto);
 
-        return mapToDto(employment);
-    }
+        /*
+         * Additional Date Validation
+         */
 
-    @Override
-    public EmploymentDetailsDto getEmploymentDetailsByEmail(String email) {
+        if (dto.getEmploymentStatus() ==
+                EmploymentStatus.CURRENTLY_EMPLOYED) {
 
-        Candidate candidate = candidateRepository.findByEmail(email)                .orElseThrow(() ->
-                        new RuntimeException("Candidate not found"));
+            if (dto.getWorkingFrom() != null &&
+                    dto.getLastWorkingDate() != null &&
+                    dto.getLastWorkingDate()
+                            .isBefore(dto.getWorkingFrom())) {
 
-        Employment employment = employmentRepository.findByCandidate(candidate)
-                .orElseThrow(() ->
-                        new RuntimeException("Employment details not found"));
-
-        return mapToDto(employment);
-    }
-
-    @Override
-    public List<EmploymentDetailsDto> searchEmploymentDetails(String keyword) {
-
-        return candidateRepository
-                .findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                        keyword,
-                        keyword
-                )
-                .stream()
-                .map(candidate -> employmentRepository.findByCandidate(candidate)
-                        .orElse(null))
-                .filter(java.util.Objects::nonNull)
-                .map(this::mapToDto)
-                .toList();
-    }
-
-    @Override
-    public void deleteEmploymentDetails(Long candidateId) {
-
-        Employment employment = employmentRepository.findByCandidateId(candidateId)
-                .orElseThrow(() ->
-                        new RuntimeException("Employment details not found"));
-
-        employmentRepository.delete(employment);
-    }
-
-    private void validateEmploymentDetails(Candidate candidate,
-                                           EmploymentDetailsDto dto) {
-
-
-
-        //  Experienced Candidate Validation
-
-        if (candidate.getCandidateType() == CandidateType.EXPERIENCED) {
-
-            if (dto.getPreviousCompanyName() == null ||
-                    dto.getPreviousCompanyName().isBlank()) {
-                throw new RuntimeException("Previous Company Name is required.");
+                throw new BadRequestException(
+                        "Last Working Date cannot be before Working From.");
             }
 
-            if (dto.getPreviousDesignation() == null ||
-                    dto.getPreviousDesignation().isBlank()) {
-                throw new RuntimeException("Previous Designation is required.");
-            }
+        } else {
 
-            if (dto.getTotalExperience() == null) {
-                throw new RuntimeException("Total Experience is required.");
-            }
+            if (dto.getPreviousWorkingFrom() != null &&
+                    dto.getPreviousWorkingTo() != null &&
+                    dto.getPreviousWorkingTo()
+                            .isBefore(dto.getPreviousWorkingFrom())) {
 
-            if (dto.getLastCTC() == null) {
-                throw new RuntimeException("Last CTC is required.");
-            }
-
-            if (dto.getLastWorkingDay() == null) {
-                throw new RuntimeException("Last Working Day is required.");
-            }
-
-            if (dto.getUanNumber() == null ||
-                    dto.getUanNumber().isBlank()) {
-                throw new RuntimeException("UAN Number is required.");
-            }
-
-            // Current Employment
-
-            if (dto.getEmploymentStatus() == null) {
-                throw new RuntimeException("Employment Status is required.");
-            }
-
-            if (dto.getEmploymentStatus() == EmploymentStatus.CURRENTLY_EMPLOYED) {
-
-                if (dto.getCurrentCompany() == null ||
-                        dto.getCurrentCompany().isBlank()) {
-                    throw new RuntimeException("Current Company is required.");
-                }
-
-                if (dto.getCurrentDesignation() == null ||
-                        dto.getCurrentDesignation().isBlank()) {
-                    throw new RuntimeException("Current Designation is required.");
-                }
-
-                if (dto.getCurrentCTC() == null) {
-                    throw new RuntimeException("Current CTC is required.");
-                }
-
-                if (dto.getNoticePeriod() == null) {
-                    throw new RuntimeException("Notice Period is required.");
-                }
+                throw new BadRequestException(
+                        "Previous Working To cannot be before Previous Working From.");
             }
         }
 
+        /*
+         * Update Entity
+         */
 
-//      Offer Letter Validation
+        mapDtoToEntity(employment, dto);
 
-//        if (dto.getOfferLetterStatus() == null) {
-//            throw new RuntimeException("Offer Letter Status is required.");
-//        }
+        /*
+         * Save
+         */
+        if (dto.getEmploymentStatus() == EmploymentStatus.NOT_CURRENTLY_EMPLOYED) {
 
-//        if (dto.getOfferLetterStatus() == OfferLetterStatus.HOLDING_OFFER_LETTER) {
-//
-//            if (dto.getOfferCompanyName() == null ||
-//                    dto.getOfferCompanyName().isBlank()) {
-//                throw new RuntimeException("Offer Company Name is required.");
-//            }
-//
-//            if (dto.getOfferedCTC() == null) {
-//                throw new RuntimeException("Offered CTC is required.");
-//            }
-//
-//            if (dto.getJoiningDate() == null) {
-//                throw new RuntimeException("Joining Date is required.");
-//            }
-//
-//            if (dto.getOfferReferenceNumber() == null ||
-//                    dto.getOfferReferenceNumber().isBlank()) {
-//                throw new RuntimeException("Offer Reference Number is required.");
-//            }
-//        }
+            if (!java.util.Objects.equals(
+                    employment.getUanNumber(),
+                    dto.getUanNumber())) {
+
+                employment.setUanVerified(false);
+
+                employment.setUanVerifiedBy(null);
+
+                employment.setUanVerifiedAt(null);
+
+                employment.setUanVerificationStatus(
+                        VerificationStatus.PENDING);
+            }
+        }
+        employmentRepository.save(employment);
+
+        log.info(
+                "Employment details updated successfully for candidate {}",
+                candidate.getEmail());
+
     }
-}
+    @Override
+    public EmploymentDetailsDto getEmploymentDetails() {
+
+        Candidate candidate = getLoggedInCandidate();
+
+        Employment employment =
+                employmentRepository.findByCandidate(candidate)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Employment details not found."
+                                ));
+
+        return mapEntityToDto(employment);
+
+    }@Override
+    public EmploymentDetailsDto getEmploymentDetailsByCandidateId(
+            Long candidateId) {
+
+        Candidate candidate =
+                candidateRepository.findById(candidateId)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Candidate",
+                                        candidateId));
+
+        Employment employment =
+                employmentRepository.findByCandidate(candidate)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Employment details not found."
+                                ));
+
+        return mapEntityToDto(employment);
+
+    }@Override
+    public EmploymentDetailsDto getEmploymentDetailsByEmail(
+            String email) {
+
+        Candidate candidate =
+                candidateRepository.findByEmail(email)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Candidate with email "
+                                                + email
+                                                + " not found."
+                                ));
+
+        Employment employment =
+                employmentRepository.findByCandidate(candidate)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Employment details not found."
+                                ));
+
+        return mapEntityToDto(employment);
+
+    }
+    @Override
+    public List<EmploymentDetailsDto> searchEmploymentDetails(String keyword) {
+
+        List<Employment> employments =
+                employmentRepository.findAll();
+
+        return employments.stream()
+
+                .filter(e ->
+
+                        contains(e.getCurrentCompany(), keyword)
+
+                                || contains(e.getPreviousCompanyName(), keyword)
+
+                                || contains(e.getCurrentDesignation(), keyword)
+
+                                || contains(e.getPreviousDesignation(), keyword)
+
+                                || contains(e.getUanNumber(), keyword)
+
+                                || (e.getCandidate() != null &&
+                                contains(e.getCandidate().getUsername(), keyword))
+
+                                || (e.getCandidate() != null &&
+                                contains(e.getCandidate().getEmail(), keyword))
+
+                )
+
+                .map(this::mapEntityToDto)
+
+                .toList();
+
+    }
+    private boolean contains(String value, String keyword) {
+
+        if (value == null || keyword == null) {
+            return false;
+        }
+
+        return value.toLowerCase()
+                .contains(keyword.toLowerCase());
+
+    }
+    @Override
+    public void deleteEmploymentDetails(Long candidateId) {
+
+        Candidate candidate =
+                candidateRepository.findById(candidateId)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Candidate",
+                                        candidateId));
+
+        Employment employment =
+                employmentRepository.findByCandidate(candidate)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Employment details not found."
+                                ));
+
+        employmentRepository.delete(employment);
+
+        log.info(
+                "Employment details deleted successfully for candidate {}",
+                candidate.getEmail());
+
+    }}
+
+

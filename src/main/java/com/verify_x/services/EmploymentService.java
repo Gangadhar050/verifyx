@@ -6,23 +6,39 @@ import java.util.List;
 
 public interface EmploymentService {
 
+  /*
+   * Create
+   */
+  void saveEmploymentDetails(EmploymentDetailsDto dto);
 
-    // Create Employment Details
-    void saveEmploymentDetails(EmploymentDetailsDto dto);
+  /*
+   * Update
+   */
+  void updateEmploymentDetails(EmploymentDetailsDto dto);
 
-  //  Update Employment Details
-    void updateEmploymentDetails(EmploymentDetailsDto dto);
+  /*
+   * Candidate
+   */
+  EmploymentDetailsDto getEmploymentDetailsByCandidateId(Long candidateId);
 
-    // Get Employment By Candidate Id
-    EmploymentDetailsDto getEmploymentDetailsByCandidateId(Long candidateId);
+  /*
+   * Logged-in User
+   */
+  EmploymentDetailsDto getEmploymentDetails();
 
-    // Get Employment By Email
-    EmploymentDetailsDto getEmploymentDetailsByEmail(String email);
+  /*
+   * Search by Email
+   */
+  EmploymentDetailsDto getEmploymentDetailsByEmail(String email);
 
-    // Search Employment Details
-    List<EmploymentDetailsDto> searchEmploymentDetails(String keyword);
+  /*
+   * Search
+   */
+  List<EmploymentDetailsDto> searchEmploymentDetails(String keyword);
 
-    // Delete Employment Details
-    void deleteEmploymentDetails(Long candidateId);
+  /*
+   * Delete
+   */
+  void deleteEmploymentDetails(Long candidateId);
 
 }
