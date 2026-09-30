@@ -1,7 +1,11 @@
 package com.verify_x.controller;
 
 import com.verify_x.dto.*;
+import com.verify_x.enums.VerificationStatus;
+import com.verify_x.payload.ApiResponse;
 import com.verify_x.services.CandidateManagementService;
+import com.verify_x.services.InterviewSlotService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,7 +25,7 @@ import java.util.List;
 public class CandidateManagementController {
 
     private final CandidateManagementService candidateManagementService;
-
+    private final InterviewSlotService interviewSlotService;
 @GetMapping
 public ResponseEntity<List<CandidateSummaryDto>> getAllCandidates() {
 
@@ -55,38 +59,78 @@ public ResponseEntity<List<CandidateSummaryDto>> getAllCandidates() {
         candidateManagementService.deleteCandidate(candidateId);
         return ResponseEntity.ok("Candidate deleted successfully.");
     }
-
     @PutMapping("/{candidateId}/verify-uan")
     public ResponseEntity<String> verifyUan(
-
             @PathVariable Long candidateId,
-
-            @RequestBody UanVerificationRequestDto request,
-
+            @RequestParam VerificationStatus status,
             Authentication authentication) {
 
         candidateManagementService.verifyUan(
-
                 candidateId,
-
-                request.getStatus(),
-
-                authentication.getName());
+                status,
+                authentication.getName()
+        );
 
         return ResponseEntity.ok("UAN status updated successfully.");
     }
+//    @PutMapping("/{candidateId}/verify-uan")
+//    public ResponseEntity<String> verifyUan(
+//
+//            @PathVariable Long candidateId,
+//
+//            @RequestBody UanVerificationRequestDto request,
+//
+//            Authentication authentication) {
+//
+//        candidateManagementService.verifyUan(
+//
+//                candidateId,
+//
+//                request.getStatus(),
+//
+//                authentication.getName());
+//
+//        return ResponseEntity.ok("UAN status updated successfully.");
+//    }
 
     @PutMapping("/{candidateId}/status")
     public ResponseEntity<String> updateApplicationStatus(
             @PathVariable Long candidateId,
-            @RequestBody ApplicationStatusUpdateDto dto,
+            @RequestParam ApplicationStatus status,
+            @RequestParam(required = false) String remarks,
+
             Authentication authentication) {
+
+        ApplicationStatusUpdateDto dto = new ApplicationStatusUpdateDto();
+        dto.setStatus(status);
+        dto.setRemarks(remarks);
 
         candidateManagementService.updateApplicationStatus(
                 candidateId,
                 dto,
-                authentication.getName());
+                authentication.getName()
+        );
 
         return ResponseEntity.ok("Application status updated successfully.");
     }
+    @PostMapping("/{candidateId}/interview-slots")
+    public ResponseEntity<ApiResponse<String>> sendInterviewSlots(
+            @PathVariable Long candidateId,
+            @Valid @RequestBody InterviewSlotRequestDto request) {
+
+        interviewSlotService.createAndSendInterviewSlots(
+                candidateId,
+                request.getSlots()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.<String>builder()
+                        .success(true)
+                        .message(
+                                "Interview slots sent successfully.")
+                        .data("Success")
+                        .build()
+        );
+    }
+
 }

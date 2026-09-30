@@ -11,6 +11,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
@@ -221,5 +224,44 @@ public class EmailServiceImpl implements EmailService {
 
         sendHtmlMail(email, subject, body);
     }
+
+    @Override
+    public void sendInterviewSlotsEmail(String email, String candidateName, List<LocalDateTime> slots) {
+
+        String subject = "VerifyX | Interview Slots";
+
+        StringBuilder slotsHtml = new StringBuilder();
+        for (LocalDateTime slot : slots) {
+            slotsHtml.append("<li>").append(slot).append("</li>");
+        }
+
+        String body = """
+                <html>
+                <body>
+
+                <h2>Hello %s,</h2>
+
+                <p>Your interview slots are as follows:</p>
+
+                <ul>
+                    %s
+                </ul>
+
+                <br>
+
+                <p>Please select a suitable slot and confirm your availability.</p>
+
+                <br>
+
+                <b>VerifyX HR Team</b>
+
+                </body>
+                </html>
+                """
+                .formatted(candidateName, slotsHtml.toString());
+
+        sendHtmlMail(email, subject, body);
+    }
+
 
 }

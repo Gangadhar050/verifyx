@@ -37,7 +37,7 @@ public class EmploymentController {
 
     @PutMapping
     public ResponseEntity<ApiResponse<String>> updateEmploymentDetails(
-            @RequestBody EmploymentDetailsDto dto) {
+            @Valid @ParameterObject @ModelAttribute EmploymentDetailsDto dto) {
 
         employmentService.updateEmploymentDetails(dto);
 

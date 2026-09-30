@@ -1,5 +1,8 @@
 package com.verify_x.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 public interface EmailService {
 
     void sendApplicationApprovedEmail(
@@ -20,4 +23,9 @@ public interface EmailService {
             String remarks
     );
     void sendOtp(String email, String otp);
+
+    void sendInterviewSlotsEmail(
+            String email,
+            String candidateName,
+            List<LocalDateTime> slots);
 }

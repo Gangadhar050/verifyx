@@ -219,7 +219,7 @@ public class EmploymentServiceImpl implements EmploymentService {
             employment.setPreviousCTC(null);
             employment.setExpectedCTC(null);
             employment.setTotalExperience(null);
-            employment.setUanNumber(null);
+            employment.setUanNumber(dto.getUanNumber());
 
         } else {
 

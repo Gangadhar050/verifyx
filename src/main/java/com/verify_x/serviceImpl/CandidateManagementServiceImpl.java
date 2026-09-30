@@ -638,7 +638,7 @@ public class CandidateManagementServiceImpl
                         Set.of(
                                 DocumentType.RESUME,
                                 DocumentType.PAN_CARD,
-                                DocumentType.CURRENT_OFFERLETTER,
+//                                DocumentType.CURRENT_OFFERLETTER,
                                 DocumentType.SALARY_SLIP,
                                 DocumentType.UAN_PROOF
                         );
