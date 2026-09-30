@@ -19,4 +19,5 @@ public interface InterviewService {
     void rejectInterview(
             Long candidateId,
             String remarks);
+
 }
