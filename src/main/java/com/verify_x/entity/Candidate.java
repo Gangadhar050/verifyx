@@ -106,11 +106,24 @@ public class Candidate {
     private Set<ToolPlatform> toolPlatforms = new HashSet<>();
 
     //application status
+ // Application status
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private ApplicationStatus applicationStatus =
             ApplicationStatus.PENDING_VERIFICATION;
+
+
+    // HR Interview status
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private InterviewStatus interviewStatus = InterviewStatus.AWAITING_SLOT;
+
+    private LocalDateTime interviewCompletedAt;
+
+    @Column(length = 500)
+    private String interviewRemarks;
 
     @Column(length = 1000)
     private String remarks;

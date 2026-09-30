@@ -10,9 +10,10 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
+ 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.core.io.ByteArrayResource;
 
 @Service
 @RequiredArgsConstructor
@@ -261,6 +262,67 @@ public class EmailServiceImpl implements EmailService {
                 .formatted(candidateName, slotsHtml.toString());
 
         sendHtmlMail(email, subject, body);
+    }
+    @Override
+    public void sendOfferLetterEmail(
+            String to,
+            String candidateName,
+            byte[] pdfData,
+            String fileName
+    ) {
+        String subject = "Offer Letter - HourlyRecruit";
+
+        String body = """
+                Dear %s,
+
+                Congratulations!
+
+                We are pleased to share your offer letter from HourlyRecruit.
+
+                Please find your offer letter attached to this email as a PDF.
+
+                Kindly review the offer letter and acknowledge your acceptance as mentioned in the letter.
+
+                Regards,
+                HR Team
+                HourlyRecruit
+                """.formatted(candidateName);
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true);
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body);
+
+            ByteArrayResource pdfResource =
+                    new ByteArrayResource(pdfData);
+
+            helper.addAttachment(
+                    fileName,
+                    pdfResource,
+                    "application/pdf"
+            );
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            if (failOpen) {
+                System.err.println(
+                        "Failed to send offer letter email: "
+                                + e.getMessage()
+                );
+            } else {
+                throw new RuntimeException(
+                        "Failed to send offer letter email",
+                        e
+                );
+            }
+        }
     }
 
 

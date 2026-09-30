@@ -23,6 +23,12 @@ public class OfferLetterResponseDTO {
 
     private BigDecimal ctc;
 
+    // Monthly stipend during probation
+    private BigDecimal monthlyStipend;
+
+    // Annual salary after probation
+    private BigDecimal annualSalary;
+
     private LocalDate offerDate;
 
     private LocalDate joiningDate;
@@ -36,6 +42,12 @@ public class OfferLetterResponseDTO {
     private Long documentSize;
 
     private boolean documentAvailable;
+
+    // Offer release status
+    private boolean released;
+
+    // Date and time when offer was released
+    private LocalDateTime releasedAt;
 
     private LocalDateTime createdAt;
 

@@ -1,7 +1,6 @@
 package com.verify_x.controller;
 
 import com.verify_x.dto.OfferLetterRequestDTO;
-
 import com.verify_x.dto.OfferLetterResponseDTO;
 import com.verify_x.services.OfferLetterService;
 import jakarta.validation.Valid;
@@ -20,6 +19,10 @@ public class OfferLetterController {
 
     private final OfferLetterService offerLetterService;
 
+
+    // ============================================================
+    // CREATE OFFER LETTER
+    // ============================================================
 
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -50,6 +53,39 @@ public class OfferLetterController {
     }
 
 
+    // ============================================================
+    // RELEASE OFFER LETTER
+    // ============================================================
+
+    @PostMapping(
+            value = "/release",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<OfferLetterResponseDTO>
+    releaseOfferLetter(
+
+            @PathVariable Long candidateId,
+
+            @Valid
+            @RequestBody OfferLetterRequestDTO request
+    ) {
+
+        OfferLetterResponseDTO response =
+                offerLetterService.releaseOfferLetter(
+                        candidateId,
+                        request
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+
+    // ============================================================
+    // GET ALL OFFER LETTERS
+    // ============================================================
+
     @GetMapping
     public ResponseEntity<List<OfferLetterResponseDTO>>
     getOfferLetters(
@@ -64,6 +100,10 @@ public class OfferLetterController {
         );
     }
 
+
+    // ============================================================
+    // GET SINGLE OFFER LETTER
+    // ============================================================
 
     @GetMapping("/{offerLetterId}")
     public ResponseEntity<OfferLetterResponseDTO>
@@ -81,6 +121,11 @@ public class OfferLetterController {
                 )
         );
     }
+
+
+    // ============================================================
+    // UPDATE OFFER LETTER
+    // ============================================================
 
     @PutMapping(
             value = "/{offerLetterId}",
@@ -109,8 +154,15 @@ public class OfferLetterController {
                         candidateId,
                         offerLetterId,
                         request,
-                        file));
+                        file
+                )
+        );
     }
+
+
+    // ============================================================
+    // DOWNLOAD OFFER LETTER DOCUMENT
+    // ============================================================
 
     @GetMapping("/{offerLetterId}/document")
     public ResponseEntity<ByteArrayResource>
@@ -156,11 +208,18 @@ public class OfferLetterController {
                         ContentDisposition
                                 .inline()
                                 .filename(
-                                        document.fileName())
+                                        document.fileName()
+                                )
                                 .build()
-                                .toString())
+                                .toString()
+                )
                 .body(resource);
     }
+
+
+    // ============================================================
+    // DELETE OFFER LETTER
+    // ============================================================
 
     @DeleteMapping("/{offerLetterId}")
     public ResponseEntity<Void>
@@ -176,6 +235,8 @@ public class OfferLetterController {
                 offerLetterId
         );
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

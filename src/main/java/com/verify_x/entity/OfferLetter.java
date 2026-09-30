@@ -15,7 +15,10 @@ import java.time.LocalDateTime;
         indexes = {
                 @Index(
                         name = "idx_offer_candidate_id",
-                        columnList = "candidate_id")})
+                        columnList = "candidate_id"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,7 +35,8 @@ public class OfferLetter {
             name = "candidate_id",
             nullable = false,
             foreignKey = @ForeignKey(
-                    name = "fk_offer_letter_candidate")
+                    name = "fk_offer_letter_candidate"
+            )
     )
     private Candidate candidate;
 
@@ -42,9 +46,15 @@ public class OfferLetter {
     @Column(length = 150)
     private String designation;
 
-    //ctc in LPA with precision and scale 7.50 ==7.5 LPA
+    // Compensation
     @Column(precision = 12, scale = 2)
     private BigDecimal ctc;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal monthlyStipend;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal annualSalary;
 
     @Column(nullable = false)
     private LocalDate offerDate;
@@ -55,7 +65,14 @@ public class OfferLetter {
     @Column(length = 100)
     private String referenceNumber;
 
-    //document upload fields
+    // Offer Letter Release Status
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean released = false;
+
+    private LocalDateTime releasedAt;
+
+    // Document fields
     @Column(length = 255)
     private String documentFileName;
 
@@ -73,7 +90,7 @@ public class OfferLetter {
     )
     private byte[] documentData;
 
- //audting fields
+    // Auditing fields
     @CreationTimestamp
     @Column(
             nullable = false,

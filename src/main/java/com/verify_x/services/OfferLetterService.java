@@ -1,7 +1,6 @@
 package com.verify_x.services;
 
 import com.verify_x.dto.OfferLetterRequestDTO;
-
 import com.verify_x.dto.OfferLetterResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +38,12 @@ public interface OfferLetterService {
     DocumentDownload getDocument(
             Long candidateId,
             Long offerLetterId
+    );
+
+    // Release offer letter after successful HR interview
+    OfferLetterResponseDTO releaseOfferLetter(
+            Long candidateId,
+            OfferLetterRequestDTO request
     );
 
     record DocumentDownload(

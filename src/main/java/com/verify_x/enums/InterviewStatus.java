@@ -6,5 +6,5 @@ public enum InterviewStatus {
     SLOT_SELECTED,
     CONFIRMED,
     APPROVED,
-    REJECTED
+    REJECTED 
 }

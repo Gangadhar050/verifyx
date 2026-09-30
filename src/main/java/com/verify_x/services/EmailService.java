@@ -1,4 +1,4 @@
-package com.verify_x.services;
+  package com.verify_x.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,4 +28,11 @@ public interface EmailService {
             String email,
             String candidateName,
             List<LocalDateTime> slots);
+    
+    void sendOfferLetterEmail(
+            String to,
+            String candidateName,
+            byte[] pdfData,
+            String fileName
+    );
 }
