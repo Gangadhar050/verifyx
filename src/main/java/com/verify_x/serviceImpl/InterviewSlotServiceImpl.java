@@ -269,5 +269,10 @@ public class InterviewSlotServiceImpl
                 InterviewStatus.SLOT_SELECTED);
 
         interviewRepository.save(interview);
+
+        emailService.sendInterviewSlotSelectedEmailToHr(
+                candidate.getUsername(),
+                candidate.getEmail(),
+                selectedSlot.getSlotDateTime());
     }
 }

@@ -31,6 +31,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.frontend.application-url:http://localhost:5173/candidate}")
     private String applicationUrl;
 
+    @Value("${app.hr.email:admin@verifyx.com}")
+    private String hrEmail;
+
     @PostConstruct
     public void checkMail() {
         System.out.println("================================");
@@ -261,6 +264,40 @@ public class EmailServiceImpl implements EmailService {
                 .formatted(candidateName, slotsHtml.toString());
 
         sendHtmlMail(email, subject, body);
+    }
+
+    @Override
+    public void sendInterviewSlotSelectedEmailToHr(
+            String candidateName,
+            String candidateEmail,
+            LocalDateTime selectedSlot) {
+
+        String subject = "VerifyX | Interview Slot Selected";
+
+        String body = """
+                <html>
+                <body>
+
+                <h2>Interview slot selected</h2>
+
+                <p>Candidate <b>%s</b> (%s) has selected the following interview slot:</p>
+
+                <p><b>%s</b></p>
+
+                <br>
+
+                <p>Please prepare for the interview at the agreed time.</p>
+
+                <br>
+
+                <b>VerifyX System</b>
+
+                </body>
+                </html>
+                """
+                .formatted(candidateName, candidateEmail, selectedSlot);
+
+        sendHtmlMail(hrEmail, subject, body);
     }
 
 

@@ -31,7 +31,9 @@ import com.verify_x.repository.EmploymentRepository;
 
 import com.verify_x.services.CandidateManagementService;
 import com.verify_x.services.EmailService;
+//import com.verify_x.services.InterviewSlotService;
 
+import com.verify_x.services.InterviewSlotService;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -61,6 +63,8 @@ public class CandidateManagementServiceImpl
     private final EducationRepository educationRepository;
 
     private final EmailService emailService;
+
+    private final InterviewSlotService interviewSlotService;
 
 
     //map candidate entity to summary dto
@@ -708,14 +712,21 @@ public class CandidateManagementServiceImpl
 
             switch (dto.getStatus()) {
 
-                case APPROVED ->
+                case APPROVED -> {
 
-                        emailService
-                                .sendApplicationApprovedEmail(
-                                        candidate.getEmail(),
-                                        candidate.getUsername(),
-                                        dto.getRemarks());
+                    emailService
+                            .sendApplicationApprovedEmail(
+                                    candidate.getEmail(),
+                                    candidate.getUsername(),
+                                    dto.getRemarks());
 
+                    if (dto.getInterviewSlots() != null && !dto.getInterviewSlots().isEmpty()) {
+                        interviewSlotService.createAndSendInterviewSlots(
+                                candidateId,
+                                dto.getInterviewSlots()
+                        );
+                    }
+                }
 
                 case REJECTED ->
 

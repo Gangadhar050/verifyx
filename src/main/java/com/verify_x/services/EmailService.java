@@ -28,4 +28,9 @@ public interface EmailService {
             String email,
             String candidateName,
             List<LocalDateTime> slots);
+
+    void sendInterviewSlotSelectedEmailToHr(
+            String candidateName,
+            String candidateEmail,
+            LocalDateTime selectedSlot);
 }
