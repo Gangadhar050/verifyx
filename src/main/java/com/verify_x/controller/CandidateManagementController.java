@@ -112,24 +112,23 @@ public ResponseEntity<List<CandidateSummaryDto>> getAllCandidates() {
 
         return ResponseEntity.ok("Application status updated successfully.");
     }
-    @PostMapping("/{candidateId}/interview-slots")
-    public ResponseEntity<ApiResponse<String>> sendInterviewSlots(
-            @PathVariable Long candidateId,
-            @Valid @RequestBody InterviewSlotRequestDto request) {
-
-        interviewSlotService.createAndSendInterviewSlots(
-                candidateId,
-                request.getSlots()
-        );
-
-        return ResponseEntity.ok(
-                ApiResponse.<String>builder()
-                        .success(true)
-                        .message(
-                                "Interview slots sent successfully.")
-                        .data("Success")
-                        .build()
-        );
-    }
+//    @PostMapping("/{candidateId}/interview-slots")
+//    public ResponseEntity<ApiResponse<String>> sendInterviewSlots(
+//            @PathVariable Long candidateId,
+//            @Valid @RequestBody InterviewSlotRequestDto request) {
+//
+//        interviewSlotService.createAndSendInterviewSlots(
+//                candidateId,
+//                request.getSlots()
+//        );
+//
+//        return ResponseEntity.ok(
+//                ApiResponse.<String>builder()
+//                        .success(true)
+//                        .message("Interview slots sent successfully.")
+//                        .data("Success")
+//                        .build()
+//        );
+//    }
 
 }

@@ -8,16 +8,11 @@ public interface InterviewService {
 
     List<InterviewCandidateDto> getInterviewCandidates();
 
-    void confirmInterview(
-            Long candidateId,
-            String confirmedBy);
+    void confirmInterview(Long candidateId, String confirmedBy);
 
-    void approveInterview(
-            Long candidateId,
-            String remarks);
+    void approveInterview(Long candidateId, String remarks);
 
-    void rejectInterview(
-            Long candidateId,
-            String remarks);
+    void rejectInterview(Long candidateId, String remarks);
 
+    List<InterviewCandidateDto> getApprovedInterviewCandidates();
 }

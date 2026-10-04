@@ -9,7 +9,25 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "interview_slots")
+@Table(
+        name = "interview_slots",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_interview_slot_datetime",
+                        columnNames = "slot_date_time"
+                )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_interview_slot_status",
+                        columnList = "status"
+                ),
+                @Index(
+                        name = "idx_interview_slot_datetime",
+                        columnList = "slot_date_time"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,11 +39,20 @@ public class InterviewSlot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "candidate_id", nullable = false)
+    /*
+     * Slot is GLOBAL.
+     *
+     * It does not belong to a candidate until
+     * the candidate selects it.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "candidate_id")
     private Candidate candidate;
 
-    @Column(name = "slot_date_time", nullable = false)
+    @Column(
+            name = "slot_date_time",
+            nullable = false
+    )
     private LocalDateTime slotDateTime;
 
     @Enumerated(EnumType.STRING)

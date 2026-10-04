@@ -55,20 +55,8 @@ public class InterviewServiceImpl implements InterviewService {
         if (interview != null &&
                 interview.getSelectedSlot() != null) {
 
-            selectedSlot = interview.getSelectedSlot();
-
-        } else {
-
             selectedSlot =
-                    interviewSlotRepository
-                            .findByCandidateOrderBySlotDateTimeAsc(
-                                    candidate)
-                            .stream()
-                            .filter(slot ->
-                                    slot.getStatus()
-                                            == InterviewSlotStatus.SELECTED)
-                            .findFirst()
-                            .orElse(null);
+                    interview.getSelectedSlot();
         }
 
         return InterviewCandidateDto.builder()
@@ -78,23 +66,28 @@ public class InterviewServiceImpl implements InterviewService {
                 .appliedRole(
                         candidate.getAppliedRole() != null
                                 ? candidate.getAppliedRole().name()
-                                : null)
+                                : null
+                )
                 .bgvStatus(
                         candidate.getApplicationStatus() != null
                                 ? candidate.getApplicationStatus().name()
-                                : null)
+                                : null
+                )
                 .selectedSlotId(
                         selectedSlot != null
                                 ? selectedSlot.getId()
-                                : null)
+                                : null
+                )
                 .selectedInterviewSlot(
                         selectedSlot != null
                                 ? selectedSlot.getSlotDateTime()
-                                : null)
+                                : null
+                )
                 .interviewStatus(
                         interview != null
                                 ? interview.getInterviewStatus()
-                                : InterviewStatus.AWAITING_SLOT)
+                                : InterviewStatus.AWAITING_SLOT
+                )
                 .build();
     }
 
@@ -172,5 +165,51 @@ public class InterviewServiceImpl implements InterviewService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Interview record not found."));
+    }
+    @Override
+    public List<InterviewCandidateDto> getApprovedInterviewCandidates() {
+
+        return interviewRepository
+                .findByInterviewStatus(
+                        InterviewStatus.APPROVED
+                )
+                .stream()
+                .map(interview -> {
+
+                    Candidate candidate =
+                            interview.getCandidate();
+
+                    InterviewSlot selectedSlot =
+                            interview.getSelectedSlot();
+
+                    return InterviewCandidateDto.builder()
+                            .candidateId(candidate.getId())
+                            .candidateName(candidate.getUsername())
+                            .email(candidate.getEmail())
+                            .appliedRole(
+                                    candidate.getAppliedRole() != null
+                                            ? candidate.getAppliedRole().name()
+                                            : null
+                            )
+                            .bgvStatus(
+                                    candidate.getApplicationStatus() != null
+                                            ? candidate.getApplicationStatus().name()
+                                            : null
+                            )
+                            .selectedSlotId(
+                                    selectedSlot != null
+                                            ? selectedSlot.getId()
+                                            : null
+                            )
+                            .selectedInterviewSlot(
+                                    selectedSlot != null
+                                            ? selectedSlot.getSlotDateTime()
+                                            : null
+                            )
+                            .interviewStatus(
+                                    interview.getInterviewStatus()
+                            )
+                            .build();}).toList();
+
     }
 }

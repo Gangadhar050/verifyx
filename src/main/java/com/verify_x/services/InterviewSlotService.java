@@ -7,14 +7,11 @@ import java.util.List;
 
 public interface InterviewSlotService {
 
-    void createAndSendInterviewSlots(
-            Long candidateId,
-            List<LocalDateTime> slots);
+    void createInterviewSlots(Long candidateId, List<LocalDateTime> slots);
 
-    List<InterviewSlotResponseDto> getCandidateSlots(
-            Long candidateId);
+    List<InterviewSlotResponseDto> getAvailableSlots();
 
-    void selectInterviewSlot(
-            Long candidateId,
-            Long slotId);
+    void selectInterviewSlot(Long candidateId, Long slotId);
+
+    List<InterviewSlotResponseDto> getAllSlots();
 }

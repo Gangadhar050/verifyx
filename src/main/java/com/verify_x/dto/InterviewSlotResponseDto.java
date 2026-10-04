@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 public class InterviewSlotResponseDto {
 
     private Long id;
+
     private LocalDateTime slotDateTime;
+
     private InterviewSlotStatus status;
 }

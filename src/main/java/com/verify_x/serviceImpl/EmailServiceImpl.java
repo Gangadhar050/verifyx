@@ -6,13 +6,19 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +27,8 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
 //    @Value("${spring.mail.username}")
 //    private String fromEmail;
-
+@Value("${app.calendar.timezone:Asia/Kolkata}")
+private String calendarTimeZone;
     @Value("${app.mail.fail-open:false}")
     private boolean failOpen;
 
@@ -30,6 +37,9 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${app.frontend.application-url:http://localhost:5173/candidate}")
     private String applicationUrl;
+
+    @Value("${app.frontend.interview-url:http://localhost:5173/candidate/interview}")
+    private String interviewUrl;
 
     @Value("${app.hr.email:admin@verifyx.com}")
     private String hrEmail;
@@ -47,34 +57,79 @@ public class EmailServiceImpl implements EmailService {
             String candidateName,
             String remarks) {
 
-        String subject = "VerifyX | Application Approved";
+        String subject =
+                "VerifyX | Application Approved";
 
         String body = """
-                <html>
-                <body>
+            <html>
+            <body style="font-family: Arial, sans-serif;">
 
-                <h2>Congratulations %s!</h2>
+            <h2>Congratulations %s!</h2>
 
-                <p>Your application has been <b>APPROVED</b>.</p>
+            <p>
+                Your application has been
+                <b>APPROVED</b>.
+            </p>
 
-                <p><b>HR Remarks:</b></p>
+            <p>
+                <b>HR Remarks:</b>
+            </p>
 
-                <p>%s</p>
+            <p>%s</p>
 
-                <p><a href="%s" target="_blank">Open VerifyX Application</a></p>
+            <hr>
 
-                <br>
+            <h3>Interview Scheduling</h3>
 
-                <p>Regards,</p>
+            <p>
+                Your application has been approved.
+                Please select your preferred interview
+                date and time from the available slots.
+            </p>
 
-                <b>VerifyX HR Team</b>
+            <p>
+                <a href="%s"
+                   target="_blank"
+                   style="
+                   display:inline-block;
+                   padding:12px 24px;
+                   background-color:#2563eb;
+                   color:white;
+                   text-decoration:none;
+                   border-radius:6px;
+                   font-weight:bold;">
+                    Select Interview Slot
+                </a>
+            </p>
 
-                </body>
-                </html>
-                """
-                .formatted(candidateName, remarks, applicationUrl);
+            <p>
+                Once you select a slot, it will be
+                reserved for you and will no longer
+                be available to other candidates.
+            </p>
 
-        sendHtmlMail(to, subject, body);
+            <br>
+
+            <p>Regards,</p>
+
+            <b>VerifyX HR Team</b>
+
+            </body>
+            </html>
+            """
+                .formatted(
+                        candidateName,
+                        remarks != null
+                                ? remarks
+                                : "No remarks provided.",
+                        interviewUrl
+                );
+
+        sendHtmlMail(
+                to,
+                subject,
+                body
+        );
     }
 
     @Override
@@ -229,41 +284,194 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendInterviewSlotsEmail(String email, String candidateName, List<LocalDateTime> slots) {
+    public void sendInterviewSlotsEmail(
+            String email,
+            String candidateName,
+            List<LocalDateTime> slots) {
 
         String subject = "VerifyX | Interview Slots";
 
         StringBuilder slotsHtml = new StringBuilder();
+
         for (LocalDateTime slot : slots) {
-            slotsHtml.append("<li>").append(slot).append("</li>");
+            slotsHtml.append("<li>")
+                    .append(slot)
+                    .append("</li>");
         }
 
         String body = """
-                <html>
-                <body>
+            <html>
+            <body>
 
-                <h2>Hello %s,</h2>
+            <h2>Hello %s,</h2>
 
-                <p>Your interview slots are as follows:</p>
+            <p>Your application has been approved.</p>
 
-                <ul>
-                    %s
-                </ul>
+            <p>Your interview slot options are:</p>
 
-                <br>
+            <ul>
+                %s
+            </ul>
 
-                <p>Please select a suitable slot and confirm your availability.</p>
+            <p>Please select a suitable slot in VerifyX and confirm your availability.</p>
 
-                <br>
+            <p>A calendar file is attached. Open it using Google Calendar,
+            Outlook, or Apple Calendar.</p>
 
-                <b>VerifyX HR Team</b>
+            <br>
 
-                </body>
-                </html>
-                """
+            <b>VerifyX HR Team</b>
+
+            </body>
+            </html>
+            """
                 .formatted(candidateName, slotsHtml.toString());
 
-        sendHtmlMail(email, subject, body);
+        sendHtmlMailWithCalendar(
+                email,
+                subject,
+                body,
+                candidateName,
+                slots
+        );
+    }
+    private void sendHtmlMailWithCalendar(
+            String to,
+            String subject,
+            String body,
+            String candidateName,
+            List<LocalDateTime> slots) {
+
+        if (fromEmail == null || fromEmail.isBlank()) {
+            System.out.println(
+                    "[VerifyX LOCAL MAIL] To: " + to
+                            + " | Subject: " + subject
+                            + " | Calendar slots: " + slots.size()
+            );
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            message,
+                            true,
+                            StandardCharsets.UTF_8.name()
+                    );
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            helper.addAttachment(
+                    "VerifyX-interview-options.ics",
+                    new ByteArrayResource(
+                            buildInterviewCalendar(candidateName, slots)
+                    ),
+                    "text/calendar; charset=UTF-8; method=PUBLISH"
+            );
+
+            mailSender.send(message);
+
+        } catch (MessagingException | MailException ex) {
+
+            if (failOpen) {
+                System.err.println(
+                        "[VerifyX MAIL WARNING] Calendar email delivery failed: "
+                                + ex.getMessage()
+                );
+                return;
+            }
+
+            throw new RuntimeException(
+                    "Unable to send calendar email.",
+                    ex
+            );
+        }
+    }
+
+    private byte[] buildInterviewCalendar(
+            String candidateName,
+            List<LocalDateTime> slots) {
+
+        ZoneId zone = ZoneId.of(calendarTimeZone);
+
+        String now = DateTimeFormatter
+                .ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                .format(ZonedDateTime.now(ZoneId.of("UTC")));
+
+        StringBuilder calendar = new StringBuilder();
+
+        calendar.append("BEGIN:VCALENDAR\r\n");
+        calendar.append("VERSION:2.0\r\n");
+        calendar.append("PRODID:-//VerifyX//Interview Slots//EN\r\n");
+        calendar.append("CALSCALE:GREGORIAN\r\n");
+        calendar.append("METHOD:PUBLISH\r\n");
+
+        for (LocalDateTime slot : slots) {
+
+            ZonedDateTime start = slot.atZone(zone);
+            ZonedDateTime end = start.plusHours(1);
+
+            calendar.append("BEGIN:VEVENT\r\n");
+            calendar.append("UID:")
+                    .append(UUID.randomUUID())
+                    .append("@verifyx\r\n");
+
+            calendar.append("DTSTAMP:")
+                    .append(now)
+                    .append("\r\n");
+
+            calendar.append("DTSTART:")
+                    .append(toUtcCalendarTime(start))
+                    .append("\r\n");
+
+            calendar.append("DTEND:")
+                    .append(toUtcCalendarTime(end))
+                    .append("\r\n");
+
+            calendar.append("SUMMARY:")
+                    .append(escapeIcs("VerifyX interview option"))
+                    .append("\r\n");
+
+            calendar.append("DESCRIPTION:")
+                    .append(escapeIcs(
+                            "Proposed interview option for "
+                                    + candidateName
+                                    + ". Please select this slot in VerifyX to confirm."
+                    ))
+                    .append("\r\n");
+
+            calendar.append("STATUS:TENTATIVE\r\n");
+            calendar.append("END:VEVENT\r\n");
+        }
+
+        calendar.append("END:VCALENDAR\r\n");
+
+        return calendar.toString()
+                .getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String toUtcCalendarTime(ZonedDateTime dateTime) {
+        return DateTimeFormatter
+                .ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                .format(
+                        dateTime.withZoneSameInstant(
+                                ZoneId.of("UTC")
+                        )
+                );
+    }
+
+    private String escapeIcs(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace(";", "\\;")
+                .replace(",", "\\,")
+                .replace("\r\n", "\\n")
+                .replace("\n", "\\n");
     }
 
     @Override

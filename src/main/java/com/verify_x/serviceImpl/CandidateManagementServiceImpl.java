@@ -711,21 +711,35 @@ public class CandidateManagementServiceImpl
         try {
 
             switch (dto.getStatus()) {
-
                 case APPROVED -> {
 
-                    emailService
-                            .sendApplicationApprovedEmail(
-                                    candidate.getEmail(),
-                                    candidate.getUsername(),
-                                    dto.getRemarks());
+                    if (dto.getInterviewSlots() == null ||
+                            dto.getInterviewSlots().isEmpty()) {
 
-                    if (dto.getInterviewSlots() != null && !dto.getInterviewSlots().isEmpty()) {
-                        interviewSlotService.createAndSendInterviewSlots(
-                                candidateId,
-                                dto.getInterviewSlots()
+                        throw new BadRequestException(
+                                "At least one interview slot is required when approving a candidate."
                         );
                     }
+
+                    // 1. Save HR-provided interview slots in database as AVAILABLE
+                    interviewSlotService.createInterviewSlots(
+                            candidateId,
+                            dto.getInterviewSlots()
+                    );
+
+                    // 2. Send approval email with “Select Interview Slot” button
+                    emailService.sendApplicationApprovedEmail(
+                            candidate.getEmail(),
+                            candidate.getUsername(),
+                            dto.getRemarks()
+                    );
+
+                    // 3. Send interview time slots and .ics calendar attachment
+                    emailService.sendInterviewSlotsEmail(
+                            candidate.getEmail(),
+                            candidate.getUsername(),
+                            dto.getInterviewSlots()
+                    );
                 }
 
                 case REJECTED ->
@@ -771,41 +785,41 @@ public class CandidateManagementServiceImpl
 
 
    //internal application ststua update
-    private void updateApplicationStatus(
-            Candidate candidate) {
-
-        List<CandidateDocument> documents =
-                candidateDocumentRepository
-                        .findByCandidate(candidate);
-
-        boolean rejected =
-                documents.stream()
-                        .anyMatch(
-                                document ->
-                                        document.getStatus()
-                                                == DocumentStatus.REJECTED);
-        boolean pending =
-                documents.stream()
-                        .anyMatch(
-                                document ->
-                                        document.getStatus()
-                                                == DocumentStatus.PENDING);
-
-        if (rejected) {
-
-            candidate.setApplicationStatus(
-                    ApplicationStatus.RE_UPLOAD_REQUIRED);
-
-        } else if (pending) {
-
-            candidate.setApplicationStatus(
-                    ApplicationStatus.PENDING_VERIFICATION);
-
-        } else {
-
-            candidate.setApplicationStatus(
-                    ApplicationStatus.DOCUMENTS_VERIFIED);
-        }
-        candidateRepository.save(candidate);
-    }
+//    private void updateApplicationStatus(
+//            Candidate candidate) {
+//
+//        List<CandidateDocument> documents =
+//                candidateDocumentRepository
+//                        .findByCandidate(candidate);
+//
+//        boolean rejected =
+//                documents.stream()
+//                        .anyMatch(
+//                                document ->
+//                                        document.getStatus()
+//                                                == DocumentStatus.REJECTED);
+//        boolean pending =
+//                documents.stream()
+//                        .anyMatch(
+//                                document ->
+//                                        document.getStatus()
+//                                                == DocumentStatus.PENDING);
+//
+//        if (rejected) {
+//
+//            candidate.setApplicationStatus(
+//                    ApplicationStatus.RE_UPLOAD_REQUIRED);
+//
+//        } else if (pending) {
+//
+//            candidate.setApplicationStatus(
+//                    ApplicationStatus.PENDING_VERIFICATION);
+//
+//        } else {
+//
+//            candidate.setApplicationStatus(
+//                    ApplicationStatus.DOCUMENTS_VERIFIED);
+//        }
+//        candidateRepository.save(candidate);
+//    }
 }

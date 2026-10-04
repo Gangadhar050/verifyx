@@ -92,4 +92,13 @@ public class InterviewManagementController {
                         .build()
         );
     }
+    @GetMapping("/approved")
+    public ResponseEntity<List<InterviewCandidateDto>>
+    getApprovedInterviewCandidates() {
+
+        return ResponseEntity.ok(
+                interviewService.getApprovedInterviewCandidates()
+        );
+    }
+
 }
