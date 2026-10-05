@@ -1,5 +1,9 @@
 package com.verify_x.services;
 
+import com.verify_x.enums.EmploymentType;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,4 +37,13 @@ public interface EmailService {
             String candidateName,
             String candidateEmail,
             LocalDateTime selectedSlot);
+
+
+       void sendOfferLetterEmail(
+            String to,
+            String candidateName,
+            String companyName,
+            String designation,
+            String referenceNumber,
+            byte[] offerLetterPdf);
 }

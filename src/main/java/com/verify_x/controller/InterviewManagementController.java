@@ -100,5 +100,4 @@ public class InterviewManagementController {
                 interviewService.getApprovedInterviewCandidates()
         );
     }
-
 }

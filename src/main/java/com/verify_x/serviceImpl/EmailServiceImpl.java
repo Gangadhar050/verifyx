@@ -19,7 +19,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-
+import com.verify_x.enums.EmploymentType;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
@@ -507,6 +509,87 @@ private String calendarTimeZone;
 
         sendHtmlMail(hrEmail, subject, body);
     }
+    @Override
+    public void sendOfferLetterEmail(
+            String to,
+            String candidateName,
+            String companyName,
+            String designation,
+            String referenceNumber,
+            byte[] offerLetterPdf) {
 
+        String subject = "Offer Letter | " + companyName
+                + " | Ref: " + referenceNumber;
+
+        String body = """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                <h3>Dear %s,</h3>
+                <p>
+                    Congratulations! Please find attached your offer letter for the
+                    position of <b>%s</b> at <b>%s</b>.
+                </p>
+                <p>Please sign and return a copy to confirm your acceptance.</p>
+                <br>
+                <p>Regards,</p>
+                <b>%s HR Team</b>
+                </body>
+                </html>
+                """.formatted(
+                esc(candidateName),
+                esc(designation),
+                esc(companyName),
+                esc(companyName));
+
+        String fileName = "Offer_Letter_"
+                + referenceNumber.replaceAll("[^A-Za-z0-9._-]", "_") + ".pdf";
+
+        sendHtmlMailWithPdf(to, subject, body, fileName, offerLetterPdf);
+    }
+
+    private void sendHtmlMailWithPdf(
+            String to,
+            String subject,
+            String body,
+            String fileName,
+            byte[] pdf) {
+
+        if (fromEmail == null || fromEmail.isBlank()) {
+            System.out.println("[VerifyX LOCAL MAIL] To: " + to
+                    + " | Subject: " + subject + " | Attachment: " + fileName);
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message, true, StandardCharsets.UTF_8.name());
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            helper.addAttachment(fileName, new ByteArrayResource(pdf), "application/pdf");
+
+            mailSender.send(message);
+
+        } catch (MessagingException | MailException ex) {
+            if (failOpen) {
+                System.err.println("[VerifyX MAIL WARNING] Offer letter email failed: "
+                        + ex.getMessage());
+                return;
+            }
+            throw new RuntimeException("Unable to send offer letter email.", ex);
+        }
+    }
+
+    // Prevent HTML injection from HR-typed values
+    private String esc(String v) {
+        return v == null ? "" : v
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
+    }
 
 }
