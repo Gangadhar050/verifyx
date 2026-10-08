@@ -24,7 +24,6 @@ public class HrOfferLetterController {
 
     private final HrOfferLetterService hrOfferLetterService;
 
-    // POST /api/hr/candidates/{candidateId}/offer-letters/send
     @PostMapping("/send")
     public ResponseEntity<ApiResponse<HrOfferLetterResponseDTO>> send(
             @PathVariable Long candidateId,

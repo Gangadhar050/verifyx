@@ -27,17 +27,6 @@ public class CandidateDocumentController {
             candidateDocumentService;
 
 
-    // =========================================================
-    // UPLOAD DOCUMENTS
-    //
-    // Passport and Visa are OPTIONAL.
-    //
-    // Candidate may send:
-    // passport only
-    // visa only
-    // both
-    // neither
-    // =========================================================
 
     @PostMapping(
             value = "/upload",
@@ -56,13 +45,6 @@ public class CandidateDocumentController {
                         "Documents uploaded successfully.",
                         null));
     }
-
-
-    // =========================================================
-    // RE-UPLOAD REJECTED DOCUMENTS
-    //
-    // Passport/Visa are also supported here.
-    // =========================================================
 
     @PutMapping(
             value = "/re-upload",
