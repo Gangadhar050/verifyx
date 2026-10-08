@@ -20,6 +20,14 @@ public class GeminiEducationParser {
     @Value("${spring.ai.google.genai.api-key:}")
     private String configuredApiKey;
 
+    @Value("${spring.ai.google.genai.chat.options.model:NOT_SET}")
+    private String model;
+
+    @jakarta.annotation.PostConstruct
+    void logModel() {
+        log.info("Gemini model = [{}]", model);
+    }
+
     private static final int MAX_ATTEMPTS = 3;
     private static final long INITIAL_BACKOFF_MILLIS = 5000;
 
