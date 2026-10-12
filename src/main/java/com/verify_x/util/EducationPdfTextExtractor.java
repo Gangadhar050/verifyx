@@ -155,8 +155,8 @@ public class EducationPdfTextExtractor {
         }
         return "";
     }
-
     private void put(Map<String, String> out, String key, String value) {
         if (value != null && !value.isBlank()) out.put(key, value.trim());
     }
+
 }
