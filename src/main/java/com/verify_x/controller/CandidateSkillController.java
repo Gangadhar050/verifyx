@@ -55,6 +55,7 @@ public class CandidateSkillController {
                         candidateSkillService.getRecommendedSkills()
                 )
         );
+
     }
 
     @PostMapping

@@ -139,7 +139,8 @@ public enum TechnicalSkill {
     REACT_NATIVE,
     SWIFT_IOS,
 
-
+    RESPONSIVE_WEB_DESIGN,
+    WEB_ACCESSIBILITY,
 
     MICROSERVICES,
     SYSTEM_DESIGN,

@@ -4,6 +4,7 @@ import com.verify_x.payload.ApiResponse;
 import com.verify_x.payload.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
@@ -173,5 +174,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGeocodingError(GeocodingException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ErrorResponse(ex.getMessage()));
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleUnreadable(HttpMessageNotReadableException ex) {
+        log.warn("Invalid request body: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid request body"));
     }
 }

@@ -5,6 +5,7 @@ import com.verify_x.dto.CandidateProfileDto;
 import com.verify_x.dto.CandidateIdentityDto;
 import com.verify_x.entity.Candidate;
 import com.verify_x.entity.Employment;
+import com.verify_x.enums.EmploymentStatus;
 import com.verify_x.repository.CandidateRepository;
 import com.verify_x.repository.EmploymentRepository;
 import com.verify_x.services.CandidateService;
@@ -145,7 +146,10 @@ public class CandidateServiceImpl implements CandidateService {
                 throw new RuntimeException("UAN Number must contain 12 digits");
             }
             Employment employment = employmentRepository.findByCandidate(candidate)
-                    .orElseGet(() -> Employment.builder().candidate(candidate).build());
+                    .orElseGet(() -> Employment.builder()
+                            .candidate(candidate)
+                            .employmentStatus(EmploymentStatus.CURRENTLY_EMPLOYED) // replace with a real value
+                            .build());
             employment.setUanNumber(uan);
             employmentRepository.save(employment);
         }
